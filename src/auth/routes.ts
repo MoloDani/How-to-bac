@@ -2,10 +2,28 @@
 import type { FastifyPluginAsync } from 'fastify'
 import argon2 from 'argon2'
 import crypto from 'node:crypto'
-import { z } from 'zod'
 import { prisma } from '../db.js'
 import { requireAuth, currentUserId } from './middleware.js'
 import { sendVerificationEmail, sendPasswordResetEmail } from './mailer.js'
+import {
+  registerBodyDto,
+  loginBodyDto,
+  refreshBodyDto,
+  tokenBodyDto,
+  forgotBodyDto,
+  resetBodyDto,
+} from './dto.js'
+import {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  logoutSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
+  forgotSchema,
+  resetSchema,
+  meSchema,
+} from './swagger.js'
 import {
   signAccess,
   issueRefresh,
@@ -19,20 +37,6 @@ import {
 // Verified against on unknown-email logins so response time doesn't
 // reveal whether an account exists.
 const DUMMY_HASH = await argon2.hash('placeholder-for-timing-equalisation')
-
-const emailField = z.string().email().max(255)
-const passwordField = z.string().min(8).max(200)
-
-const registerBody = z.object({
-  email: emailField,
-  password: passwordField,
-  displayName: z.string().min(1).max(96).optional(),
-})
-const loginBody = z.object({ email: emailField, password: z.string().min(1).max(200) })
-const refreshBody = z.object({ refresh: z.string().min(1) })
-const tokenBody = z.object({ token: z.string().min(1) })
-const forgotBody = z.object({ email: emailField })
-const resetBody = z.object({ token: z.string().min(1), password: passwordField })
 
 /** Derive a unique handle from the email local part. */
 async function makeHandle(addr: string): Promise<string> {
@@ -67,8 +71,8 @@ const tokenLimit = {
 
 const authRoutes: FastifyPluginAsync = async (app) => {
   // ── register ────────────────────────────────────────────────────
-  app.post('/register', strict, async (req, reply) => {
-    const parsed = registerBody.safeParse(req.body)
+  app.post('/register', { ...strict, schema: registerSchema }, async (req, reply) => {
+    const parsed = registerBodyDto.safeParse(req.body)
     if (!parsed.success) {
       return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues })
     }
@@ -105,8 +109,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── login ───────────────────────────────────────────────────────
-  app.post('/login', strict, async (req, reply) => {
-    const parsed = loginBody.safeParse(req.body)
+  app.post('/login', { ...strict, schema: loginSchema }, async (req, reply) => {
+    const parsed = loginBodyDto.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ error: 'invalid_body' })
     const { email, password } = parsed.data
 
@@ -131,8 +135,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── refresh ─────────────────────────────────────────────────────
-  app.post('/refresh', async (req, reply) => {
-    const parsed = refreshBody.safeParse(req.body)
+  app.post('/refresh', { schema: refreshSchema }, async (req, reply) => {
+    const parsed = refreshBodyDto.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ error: 'invalid_body' })
 
     const result = await rotateRefresh(parsed.data.refresh)
@@ -142,15 +146,15 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── logout ──────────────────────────────────────────────────────
-  app.post('/logout', async (req, reply) => {
-    const parsed = refreshBody.safeParse(req.body)
+  app.post('/logout', { schema: logoutSchema }, async (req, reply) => {
+    const parsed = refreshBodyDto.safeParse(req.body)
     if (parsed.success) await revokeByToken(parsed.data.refresh)
     return reply.code(204).send()
   })
 
   // ── verify email ────────────────────────────────────────────────
-  app.post('/verify-email', tokenLimit, async (req, reply) => {
-    const parsed = tokenBody.safeParse(req.body)
+  app.post('/verify-email', { ...tokenLimit, schema: verifyEmailSchema }, async (req, reply) => {
+    const parsed = tokenBodyDto.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ error: 'invalid_body' })
 
     const userId = await consumeAuthToken(parsed.data.token, 'email_verify')
@@ -167,7 +171,11 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   // ── resend verification ─────────────────────────────────────────
   app.post(
     '/resend-verification',
-    { preHandler: requireAuth, config: { rateLimit: { max: 3, timeWindow: '1 hour' } } },
+    {
+      preHandler: requireAuth,
+      config: { rateLimit: { max: 3, timeWindow: '1 hour' } },
+      schema: resendVerificationSchema,
+    },
     async (req, reply) => {
       const user = await prisma.users.findUnique({
         where: { id: currentUserId(req) },
@@ -182,8 +190,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   )
 
   // ── forgot password ─────────────────────────────────────────────
-  app.post('/forgot', strict, async (req, reply) => {
-    const parsed = forgotBody.safeParse(req.body)
+  app.post('/forgot', { ...strict, schema: forgotSchema }, async (req, reply) => {
+    const parsed = forgotBodyDto.safeParse(req.body)
     // Identical response whether or not the address exists — otherwise
     // this endpoint enumerates accounts.
     if (!parsed.success) return reply.send({ ok: true })
@@ -204,8 +212,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── reset password ──────────────────────────────────────────────
-  app.post('/reset', tokenLimit, async (req, reply) => {
-    const parsed = resetBody.safeParse(req.body)
+  app.post('/reset', { ...tokenLimit, schema: resetSchema }, async (req, reply) => {
+    const parsed = resetBodyDto.safeParse(req.body)
     if (!parsed.success) {
       return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues })
     }
@@ -230,7 +238,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── me ──────────────────────────────────────────────────────────
-  app.get('/me', { preHandler: requireAuth }, async (req, reply) => {
+  app.get('/me', { preHandler: requireAuth, schema: meSchema }, async (req, reply) => {
     const user = await prisma.users.findUnique({
       where: { id: currentUserId(req) },
       select: {

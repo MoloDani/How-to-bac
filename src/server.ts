@@ -2,6 +2,8 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
 import { env } from './env.js'
 import { prisma } from './db.js'
 import authRoutes from './auth/routes.js'
@@ -34,7 +36,41 @@ await app.register(rateLimit, {
   keyGenerator: (req) => (req.headers['cf-connecting-ip'] as string) ?? req.ip,
 })
 
-app.get('/healthz', async () => ({ ok: true }))
+await app.register(swagger, {
+  openapi: {
+    info: {
+      title: 'How-to-bac API',
+      version: '1.0.0',
+    },
+    tags: [{ name: 'system' }, { name: 'auth' }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+  },
+})
+
+await app.register(swaggerUi, {
+  routePrefix: '/documentation',
+})
+
+app.get('/healthz', {
+  schema: {
+    tags: ['system'],
+    response: {
+      200: {
+        type: 'object',
+        properties: { ok: { type: 'boolean' } },
+        required: ['ok'],
+      },
+    },
+  },
+}, async () => ({ ok: true }))
 
 await app.register(authRoutes, { prefix: '/v1/auth' })
 
