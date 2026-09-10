@@ -16,8 +16,6 @@ import {
   consumeAuthToken,
 } from './tokens.js'
 
-const RO_MIN_AGE = 16
-
 // Verified against on unknown-email logins so response time doesn't
 // reveal whether an account exists.
 const DUMMY_HASH = await argon2.hash('placeholder-for-timing-equalisation')
@@ -28,7 +26,6 @@ const passwordField = z.string().min(8).max(200)
 const registerBody = z.object({
   email: emailField,
   password: passwordField,
-  birthYear: z.number().int().min(1900).max(new Date().getFullYear()),
   displayName: z.string().min(1).max(96).optional(),
 })
 const loginBody = z.object({ email: emailField, password: z.string().min(1).max(200) })
@@ -53,7 +50,20 @@ async function makeHandle(addr: string): Promise<string> {
   return `user${crypto.randomUUID().slice(0, 12)}`
 }
 
-const strict = { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } }
+const byEmail = (req: any) => {
+  const email = req.body?.email?.toLowerCase()
+  return email ?? (req.headers['cf-connecting-ip'] ?? req.ip)
+}
+
+// login / register / forgot: 5 attempts per account per 15 min
+const strict = {
+  config: { rateLimit: { max: 5, timeWindow: '15 minutes', keyGenerator: byEmail } },
+}
+
+// verify-email / reset: keyed on IP, since the body has a token not an email
+const tokenLimit = {
+  config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+}
 
 const authRoutes: FastifyPluginAsync = async (app) => {
   // ── register ────────────────────────────────────────────────────
@@ -62,7 +72,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
     if (!parsed.success) {
       return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues })
     }
-    const { email, password, birthYear, displayName } = parsed.data
+    const { email, password, displayName } = parsed.data
 
     const existing = await prisma.users.findUnique({
       where: { email },
@@ -73,25 +83,16 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(409).send({ error: 'registration_failed' })
     }
 
-    const needsConsent = new Date().getFullYear() - birthYear < RO_MIN_AGE
-
     const user = await prisma.users.create({
       data: {
         email,
         handle: await makeHandle(email),
         password_hash: await argon2.hash(password),
-        birth_year: birthYear,
         display_name: displayName ?? null,
         referral_code: crypto.randomBytes(6).toString('base64url').slice(0, 8),
       },
       select: { id: true, email: true, handle: true },
     })
-
-    // Under 16 in Romania: account exists, but no session until a parent
-    // has consented. TODO: parental consent email flow.
-    if (needsConsent) {
-      return reply.code(201).send({ user, requiresParentalConsent: true })
-    }
 
     await sendVerificationEmail(email, await issueAuthToken(user.id, 'email_verify'))
 
@@ -121,14 +122,6 @@ const authRoutes: FastifyPluginAsync = async (app) => {
 
     if (!user || !ok) return reply.code(401).send({ error: 'invalid_credentials' })
 
-    if (
-      user.birth_year &&
-      new Date().getFullYear() - user.birth_year < RO_MIN_AGE &&
-      !user.parental_consent_at
-    ) {
-      return reply.code(403).send({ error: 'parental_consent_required' })
-    }
-
     return reply.send({
       user: { id: user.id, email: user.email, handle: user.handle },
       emailVerified: user.email_verified_at !== null,
@@ -156,7 +149,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── verify email ────────────────────────────────────────────────
-  app.post('/verify-email', async (req, reply) => {
+  app.post('/verify-email', tokenLimit, async (req, reply) => {
     const parsed = tokenBody.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ error: 'invalid_body' })
 
@@ -211,7 +204,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   })
 
   // ── reset password ──────────────────────────────────────────────
-  app.post('/reset', strict, async (req, reply) => {
+  app.post('/reset', tokenLimit, async (req, reply) => {
     const parsed = resetBody.safeParse(req.body)
     if (!parsed.success) {
       return reply.code(400).send({ error: 'invalid_body', issues: parsed.error.issues })

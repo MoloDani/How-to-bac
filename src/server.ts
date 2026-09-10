@@ -19,9 +19,12 @@ const app = Fastify({
   trustProxy: true,
 })
 
-await app.register(cors, {
-  origin: [env.APP_BASE_URL],
-  credentials: false, // bearer tokens, not cookies
+await app.register(rateLimit, {
+  global: true,
+  max: 100,
+  timeWindow: '1 minute',
+  hook: 'preHandler',
+  keyGenerator: (req) => (req.headers['cf-connecting-ip'] as string) ?? req.ip,
 })
 
 await app.register(rateLimit, {
