@@ -1,4 +1,4 @@
-Loaded Prisma config from "/Users/danielmolodet/Documents/Projects/How-to-bac/prisma.config.ts".
+Loaded Prisma config from "/root/How-to-bac/prisma.config.ts".
 -- CreateTable
 CREATE TABLE `refresh_tokens` (
     `id` VARCHAR(191) NOT NULL,
