@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -12,4 +6,310 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model blocks {
+  id         BigInt            @id @default(autoincrement())
+  lesson_id  BigInt
+  sort_order Int
+  block_type blocks_block_type
+  payload    Json
+  audio_url  String?           @db.VarChar(500)
+  alt_text   String?           @db.VarChar(500)
+  source_ref String?           @db.VarChar(300)
+  lessons    lessons           @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "blocks_ibfk_1")
+
+  @@index([lesson_id, sort_order], map: "idx_lesson_order")
+}
+
+model enrollments {
+  user_id     BigInt
+  track_id    Int
+  started_at  DateTime? @default(now()) @db.Timestamp(0)
+  target_date DateTime? @db.Date
+
+  @@id([user_id, track_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model friendships {
+  user_low     BigInt
+  user_high    BigInt
+  requested_by BigInt
+  status       friendships_status @default(pending)
+  created_at   DateTime?          @default(now()) @db.Timestamp(0)
+
+  @@id([user_low, user_high])
+}
+
+model item_options {
+  id         BigInt  @id @default(autoincrement())
+  item_id    BigInt
+  sort_order Int     @db.TinyInt
+  body       String  @db.Text
+  is_correct Boolean @default(false)
+  items      items   @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "item_options_ibfk_1")
+
+  @@index([item_id], map: "item_id")
+}
+
+model items {
+  id             BigInt              @id @default(autoincrement())
+  lesson_id      BigInt
+  item_type      items_item_type
+  stem           String              @db.Text
+  answer_key     Json
+  explanation    String?             @db.Text
+  difficulty     Int                 @default(3) @db.TinyInt
+  status         items_status        @default(draft)
+  source         items_source        @default(human)
+  verification   items_verification?
+  verified_by    BigInt?
+  verified_at    DateTime?           @db.Timestamp(0)
+  n_responses    Int                 @default(0)
+  p_value        Decimal?            @db.Decimal(4, 3)
+  point_biserial Decimal?            @db.Decimal(4, 3)
+  item_options   item_options[]
+  lessons        lessons             @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "items_ibfk_1")
+
+  @@index([lesson_id, status], map: "idx_lesson")
+}
+
+model lesson_prerequisites {
+  lesson_id                                         BigInt
+  requires_id                                       BigInt
+  note                                              String? @db.VarChar(240)
+  lessons_lesson_prerequisites_lesson_idTolessons   lessons @relation("lesson_prerequisites_lesson_idTolessons", fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lesson_prerequisites_ibfk_1")
+  lessons_lesson_prerequisites_requires_idTolessons lessons @relation("lesson_prerequisites_requires_idTolessons", fields: [requires_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lesson_prerequisites_ibfk_2")
+
+  @@id([lesson_id, requires_id])
+  @@index([requires_id], map: "requires_id")
+}
+
+model lesson_progress {
+  user_id        BigInt
+  lesson_id      BigInt
+  state          lesson_progress_state @default(available)
+  completed_at   DateTime?             @db.Timestamp(0)
+  next_review_at DateTime?             @db.Date
+  ease           Decimal               @default(2.50) @db.Decimal(4, 2)
+
+  @@id([user_id, lesson_id])
+  @@index([user_id, next_review_at], map: "idx_due")
+}
+
+model lessons {
+  id                                                             BigInt                 @id @default(autoincrement())
+  module_id                                                      BigInt
+  slug                                                           String                 @db.VarChar(96)
+  display_name                                                   String                 @db.VarChar(240)
+  summary                                                        String?                @db.VarChar(500)
+  est_minutes                                                    Int                    @default(10) @db.TinyInt
+  sort_order                                                     Int                    @default(0)
+  programa_ref                                                   String?                @db.VarChar(160)
+  status                                                         lessons_status         @default(draft)
+  source                                                         lessons_source         @default(human)
+  verified_by                                                    BigInt?
+  verified_at                                                    DateTime?              @db.Timestamp(0)
+  created_at                                                     DateTime?              @default(now()) @db.Timestamp(0)
+  blocks                                                         blocks[]
+  items                                                          items[]
+  lesson_prerequisites_lesson_prerequisites_lesson_idTolessons   lesson_prerequisites[] @relation("lesson_prerequisites_lesson_idTolessons")
+  lesson_prerequisites_lesson_prerequisites_requires_idTolessons lesson_prerequisites[] @relation("lesson_prerequisites_requires_idTolessons")
+  modules                                                        modules                @relation(fields: [module_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_1")
+
+  @@unique([module_id, slug], map: "uq_lesson")
+  @@index([status], map: "idx_status")
+}
+
+model modules {
+  id           BigInt    @id @default(autoincrement())
+  track_id     Int
+  slug         String    @db.VarChar(96)
+  display_name String    @db.VarChar(200)
+  sort_order   Int       @default(0)
+  lessons      lessons[]
+  tracks       tracks    @relation(fields: [track_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "modules_ibfk_1")
+
+  @@unique([track_id, slug], map: "uq_module")
+}
+
+model responses {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt
+  item_id    BigInt
+  given      Json
+  is_correct Boolean
+  ms_taken   Int?
+  local_date DateTime  @db.Date
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([item_id], map: "idx_item")
+  @@index([user_id, local_date], map: "idx_user_date")
+}
+
+model scripture_editions {
+  id               Int                      @id @default(autoincrement())
+  code             String                   @unique(map: "code") @db.VarChar(32)
+  display_name     String                   @db.VarChar(160)
+  canon            scripture_editions_canon
+  license          String                   @db.VarChar(240)
+  scripture_verses scripture_verses[]
+}
+
+model scripture_verses {
+  edition_id         Int
+  book               String             @db.VarChar(16)
+  chapter            Int                @db.SmallInt
+  verse              Int                @db.SmallInt
+  body               String             @db.Text
+  scripture_editions scripture_editions @relation(fields: [edition_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scripture_verses_ibfk_1")
+
+  @@id([edition_id, book, chapter, verse])
+}
+
+model sensitive_consents {
+  id             BigInt    @id @default(autoincrement())
+  user_id        BigInt
+  purpose        String    @db.VarChar(64)
+  granted_at     DateTime  @db.Timestamp(0)
+  revoked_at     DateTime? @db.Timestamp(0)
+  policy_version String    @db.VarChar(16)
+  users          users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sensitive_consents_ibfk_1")
+
+  @@index([user_id, purpose], map: "idx_user")
+}
+
+model tracks {
+  id           Int         @id @default(autoincrement())
+  slug         String      @unique(map: "slug") @db.VarChar(64)
+  kind         tracks_kind
+  display_name String      @db.VarChar(160)
+  subject_id   Int?
+  is_sensitive Boolean     @default(false)
+  created_at   DateTime?   @default(now()) @db.Timestamp(0)
+  modules      modules[]
+}
+
+model user_streaks {
+  user_id           BigInt   @id
+  current_len       Int      @default(0)
+  longest_len       Int      @default(0)
+  last_active_date  DateTime @db.Date
+  freezes_available Int      @default(0) @db.TinyInt
+  weekly_goal_days  Int      @default(5) @db.TinyInt
+}
+
+model users {
+  id                  BigInt               @id @default(autoincrement())
+  email               String?              @unique(map: "email") @db.VarChar(255)
+  handle              String               @unique(map: "handle") @db.VarChar(32)
+  password_hash       String?              @db.VarChar(255)
+  display_name        String?              @db.VarChar(96)
+  birth_year          Int?                 @db.SmallInt
+  parental_consent_at DateTime?            @db.Timestamp(0)
+  specialization_id   Int?
+  grade_level         Int?                 @db.TinyInt
+  bac_year            Int?                 @db.SmallInt
+  timezone            String               @default("Europe/Bucharest") @db.VarChar(48)
+  referral_code       String?              @unique(map: "referral_code") @db.VarChar(12)
+  referred_by         BigInt?
+  created_at          DateTime?            @default(now()) @db.Timestamp(0)
+  sensitive_consents  sensitive_consents[]
+}
+
+model xp_events {
+  id         BigInt           @id @default(autoincrement())
+  user_id    BigInt
+  amount     Int
+  reason     xp_events_reason
+  lesson_id  BigInt?
+  local_date DateTime         @db.Date
+  created_at DateTime?        @default(now()) @db.Timestamp(0)
+
+  @@index([user_id, local_date], map: "idx_user_date")
+}
+
+enum items_item_type {
+  mcq
+  numeric
+  short_text
+  order_steps
+}
+
+enum lesson_progress_state {
+  locked
+  available
+  in_progress
+  completed
+  mastered
+}
+
+enum tracks_kind {
+  exam_subject
+  devotional
+}
+
+enum blocks_block_type {
+  text
+  formula
+  image
+  audio
+  video
+  worked_example
+  interactive
+  scripture
+  question
+}
+
+enum friendships_status {
+  pending
+  accepted
+  blocked
+}
+
+enum scripture_editions_canon {
+  protestant
+  orthodox
+  catholic
+}
+
+enum xp_events_reason {
+  lesson_complete
+  review_on_time
+  duel_win
+  bonus
+}
+
+enum items_status {
+  draft
+  shadow
+  published
+  flagged
+  retired
+}
+
+enum items_source {
+  human
+  ai_draft
+  ai_variant
+}
+
+enum lessons_status {
+  draft
+  in_review
+  published
+  retired
+}
+
+enum items_verification {
+  human
+  cas
+  both
+}
+
+enum lessons_source {
+  human
+  ai_draft
+  ai_variant
 }
