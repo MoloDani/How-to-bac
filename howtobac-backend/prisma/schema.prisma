@@ -1,0 +1,108 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+// Connection URL lives in prisma.config.ts (Prisma 7).
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CONTRIBUTOR
+  USER
+}
+
+/// Bac subjects ("materii").
+enum Subject {
+  MATHEMATICS
+  ROMANIAN
+  HISTORY
+  PHYSICS
+  ORGANIC_CHEMISTRY
+  INORGANIC_CHEMISTRY
+  PLANT_ANIMAL_BIOLOGY
+  HUMAN_ANATOMY_GENETICS
+  COMPUTER_SCIENCE
+  GEOGRAPHY
+  LOGIC
+  PSYCHOLOGY
+  SOCIOLOGY
+  ECONOMICS
+  PHILOSOPHY
+}
+
+enum AuthTokenPurpose {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+model User {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  /// Always stored trimmed and lowercased.
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash")
+  userName        String    @map("user_name") @db.VarChar(64)
+  role            Role      @default(USER)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  subjects      UserSubject[]  @relation("SubjectOwner")
+  grantedSubjects UserSubject[] @relation("SubjectGrantor")
+  refreshTokens RefreshToken[]
+  authTokens    AuthToken[]
+
+  @@map("users")
+}
+
+/// What a row grants depends on the owner's role:
+/// CONTRIBUTOR -> view + edit, USER -> view, ADMIN -> ignored (full access).
+model UserSubject {
+  userId      String   @map("user_id") @db.Uuid
+  subject     Subject
+  /// null = picked by the user themselves, otherwise the admin who assigned it.
+  grantedById String?  @map("granted_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user      User  @relation("SubjectOwner", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("SubjectGrantor", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@id([userId, subject])
+  @@map("user_subjects")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(64)
+  familyId  String    @map("family_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+/// Single-use tokens sent by email (verification, password reset).
+model AuthToken {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  purpose   AuthTokenPurpose
+  tokenHash String           @unique @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime         @map("expires_at")
+  usedAt    DateTime?        @map("used_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("auth_tokens")
+}
