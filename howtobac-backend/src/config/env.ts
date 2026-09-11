@@ -42,13 +42,23 @@ const envSchema = z
     /** Telemetry keys from https://observe.nestjs.com. Both empty = off. */
     OBSERVE_APP_KEY: optional(z.string()),
     OBSERVE_APP_SECRET: optional(z.string()),
+
+    /** Swagger UI at /docs. Defaults to on outside production. */
+    SWAGGER_ENABLED: optional(z.enum(['true', 'false'])),
+    /** When both are set, /docs asks for this username and password. */
+    SWAGGER_USER: optional(z.string()),
+    SWAGGER_PASSWORD: optional(z.string()),
   })
-  .transform(({ COOKIE_SECURE, ...env }) => ({
+  .transform(({ COOKIE_SECURE, SWAGGER_ENABLED, ...env }) => ({
     ...env,
     COOKIE_SECURE:
       COOKIE_SECURE === undefined
         ? env.NODE_ENV === 'production'
         : COOKIE_SECURE === 'true',
+    SWAGGER_ENABLED:
+      SWAGGER_ENABLED === undefined
+        ? env.NODE_ENV !== 'production'
+        : SWAGGER_ENABLED === 'true',
   }))
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production' && !env.RESEND_API_KEY) {
@@ -70,6 +80,13 @@ const envSchema = z
         code: 'custom',
         path: ['OBSERVE_APP_SECRET'],
         message: 'set both OBSERVE_APP_KEY and OBSERVE_APP_SECRET, or neither',
+      });
+    }
+    if (Boolean(env.SWAGGER_USER) !== Boolean(env.SWAGGER_PASSWORD)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['SWAGGER_PASSWORD'],
+        message: 'set both SWAGGER_USER and SWAGGER_PASSWORD, or neither',
       });
     }
   });

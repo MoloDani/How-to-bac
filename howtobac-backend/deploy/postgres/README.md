@@ -65,6 +65,9 @@ CORS_ORIGINS=<frontend URL>
 COOKIE_SECURE=false   # until the API is served over HTTPS
 OBSERVE_APP_KEY=<from observe.nestjs.com>      # optional — leave both empty
 OBSERVE_APP_SECRET=<from observe.nestjs.com>   # to turn telemetry off
+SWAGGER_ENABLED=true                           # optional — API docs at /docs
+SWAGGER_USER=<username>                        # protects /docs; set both
+SWAGGER_PASSWORD=<a strong password>
 ```
 
 ```bash

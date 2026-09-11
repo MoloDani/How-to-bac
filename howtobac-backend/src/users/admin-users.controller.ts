@@ -8,6 +8,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { AuthUser } from '../auth/auth.types.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -22,6 +23,8 @@ import {
 } from './users.schemas.js';
 import { UsersService } from './users.service.js';
 
+@ApiTags('admin')
+@ApiBearerAuth()
 @Roles(Role.ADMIN)
 @Controller('admin/users')
 export class AdminUsersController {

@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AccountThrottle, TokenThrottle } from '../common/throttle.js';
 import {
@@ -17,6 +18,7 @@ import { AuthService } from './auth.service.js';
 import { Public } from './decorators/public.decorator.js';
 import { RefreshTokenTransport } from './refresh-token-transport.js';
 
+@ApiTags('auth')
 @Public()
 @Controller('auth')
 export class AuthController {
