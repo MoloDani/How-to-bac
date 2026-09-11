@@ -38,6 +38,10 @@ const envSchema = z
       ),
     COOKIE_SECURE: optional(z.enum(['true', 'false'])),
     COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+
+    /** Telemetry keys from https://observe.nestjs.com. Both empty = off. */
+    OBSERVE_APP_KEY: optional(z.string()),
+    OBSERVE_APP_SECRET: optional(z.string()),
   })
   .transform(({ COOKIE_SECURE, ...env }) => ({
     ...env,
@@ -59,6 +63,13 @@ const envSchema = z
         code: 'custom',
         path: ['COOKIE_SECURE'],
         message: 'browsers reject SameSite=None cookies without Secure',
+      });
+    }
+    if (Boolean(env.OBSERVE_APP_KEY) !== Boolean(env.OBSERVE_APP_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['OBSERVE_APP_SECRET'],
+        message: 'set both OBSERVE_APP_KEY and OBSERVE_APP_SECRET, or neither',
       });
     }
   });

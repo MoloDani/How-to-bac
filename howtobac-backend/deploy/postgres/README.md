@@ -63,6 +63,8 @@ MAIL_FROM="How to Bac <noreply@your-domain>"
 APP_BASE_URL=<frontend URL>
 CORS_ORIGINS=<frontend URL>
 COOKIE_SECURE=false   # until the API is served over HTTPS
+OBSERVE_APP_KEY=<from observe.nestjs.com>      # optional — leave both empty
+OBSERVE_APP_SECRET=<from observe.nestjs.com>   # to turn telemetry off
 ```
 
 ```bash
