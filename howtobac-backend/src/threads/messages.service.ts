@@ -11,13 +11,12 @@ import {
   canEditMessage,
   canPostIn,
 } from './thread-policy.js';
+import { toPage, type Page } from '../common/pagination.js';
 import {
   messageSelect,
   toMessageView,
-  toPage,
   type MessageRow,
   type MessageView,
-  type Page,
   type ThreadRow,
 } from './thread-views.js';
 import type {

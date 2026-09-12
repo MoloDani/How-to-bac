@@ -12,11 +12,10 @@ import {
   canModerate,
   canReadThreads,
 } from './thread-policy.js';
+import { toPage, type Page } from '../common/pagination.js';
 import {
   threadSelect,
-  toPage,
   toThreadSummary,
-  type Page,
   type ThreadRow,
   type ThreadSummary,
 } from './thread-views.js';

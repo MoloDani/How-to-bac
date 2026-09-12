@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from './auth/guards/roles.guard.js';
 import { throttlers } from './common/throttle.js';
 import { validateEnv } from './config/env.js';
+import { FriendsModule } from './friends/friends.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { observeImports } from './observe.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     UsersModule,
     ThreadsModule,
+    FriendsModule,
   ],
   controllers: [AppController],
   providers: [

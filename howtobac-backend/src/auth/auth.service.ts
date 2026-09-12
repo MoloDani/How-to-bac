@@ -8,6 +8,7 @@ import { AuthTokenPurpose } from '../generated/prisma/enums.js';
 import { MailService } from '../mail/mail.service.js';
 import { isUniqueViolation } from '../prisma/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { generateFriendCode } from '../users/friend-code.js';
 import {
   publicUserSelect,
   toPublicUser,
@@ -58,6 +59,7 @@ export class AuthService {
           email: dto.email,
           passwordHash,
           userName: dto.userName,
+          friendCode: generateFriendCode(),
           subjects: {
             create: dto.subjects.map((subject) => ({ subject })),
           },

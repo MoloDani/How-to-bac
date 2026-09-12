@@ -13,6 +13,7 @@ import {
   toPublicUser,
   type PublicUser,
 } from './public-user.js';
+import { generateFriendCode } from './friend-code.js';
 import type { ListUsersQuery, UpdateMeDto } from './users.schemas.js';
 
 @Injectable()
@@ -26,6 +27,15 @@ export class UsersService {
       select: publicUserSelect,
     });
     return toPublicUser(user);
+  }
+
+  /** New friend code; the old one stops working immediately. */
+  rotateFriendCode(userId: string): Promise<{ friendCode: string }> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { friendCode: generateFriendCode() },
+      select: { friendCode: true },
+    });
   }
 
   /** Regular users pick their own subjects. Everyone else's are admin-managed. */

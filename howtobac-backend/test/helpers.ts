@@ -5,9 +5,14 @@ import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { PasswordService } from '../src/auth/password.service.js';
-import { Role, type Subject } from '../src/generated/prisma/enums.js';
+import {
+  FriendshipStatus,
+  Role,
+  type Subject,
+} from '../src/generated/prisma/enums.js';
 import { MailService } from '../src/mail/mail.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
+import { generateFriendCode } from '../src/users/friend-code.js';
 
 export const PASSWORD = 'correct-horse-battery';
 
@@ -55,7 +60,7 @@ export interface LoggedIn {
   cookie: string;
 }
 
-/** Boots the whole app against TEST_DATABASE_URL, capturing emails instead of sending them. */
+/** Boots the whole app against the test database, capturing emails instead of sending them. */
 export async function createTestApp(extraControllers: Type[] = []) {
   const mail = new FakeMail();
   const moduleRef = await Test.createTestingModule({
@@ -68,16 +73,36 @@ export async function createTestApp(extraControllers: Type[] = []) {
 
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   configureApp(app);
-  await app.init();
+  // Listen on a real port so supertest reuses it instead of starting (and
+  // closing) a temporary server per request, which breaks concurrent requests.
+  await app.listen(0, '127.0.0.1');
 
   const prisma = app.get(PrismaService);
   const http = () => request(app.getHttpServer());
+
+  /** A verified account written directly: no emails, no rate-limited endpoints. */
+  const createUser = async (email: string, role: Role = Role.USER) => {
+    await prisma.user.create({
+      data: {
+        email,
+        passwordHash: await app.get(PasswordService).hash(PASSWORD),
+        userName: role === Role.ADMIN ? 'Admin' : 'Test',
+        role,
+        emailVerifiedAt: new Date(),
+        friendCode: generateFriendCode(),
+      },
+    });
+  };
 
   return {
     app,
     prisma,
     mail,
     http,
+    createUser,
+
+    /** Same as `pnpm db:seed`: a verified admin with PASSWORD. */
+    createAdmin: (email: string) => createUser(email, Role.ADMIN),
 
     async registerAndVerify(email: string, subjects: Subject[] = []) {
       await http()
@@ -102,19 +127,6 @@ export async function createTestApp(extraControllers: Type[] = []) {
       };
     },
 
-    /** Same as `pnpm db:seed`: a verified admin with PASSWORD. */
-    async createAdmin(email: string) {
-      await prisma.user.create({
-        data: {
-          email,
-          passwordHash: await app.get(PasswordService).hash(PASSWORD),
-          userName: 'Admin',
-          role: Role.ADMIN,
-          emailVerifiedAt: new Date(),
-        },
-      });
-    },
-
     /** Sets a role and subjects directly, without going through the admin API. */
     async grant(email: string, role: Role, subjects: Subject[]) {
       await prisma.user.update({
@@ -134,3 +146,60 @@ export async function createTestApp(extraControllers: Type[] = []) {
 }
 
 export type TestApp = Awaited<ReturnType<typeof createTestApp>>;
+
+export interface Person extends LoggedIn {
+  friendCode: string;
+}
+
+/** Shared setup for the friends and blocks specs. */
+export function friendTools(t: TestApp) {
+  const http = () => t.http();
+
+  return {
+    /** A fresh verified user, logged in, with their friend code. */
+    async person(label: string): Promise<Person> {
+      const email = newEmail(label);
+      await t.createUser(email);
+      const session = await t.login(email);
+      const { friendCode } = await t.prisma.user.findUniqueOrThrow({
+        where: { email },
+        select: { friendCode: true },
+      });
+      return { ...session, friendCode };
+    },
+
+    sendRequest: (from: Person, friendCode: string) =>
+      http()
+        .post('/v1/friends/requests')
+        .set(bearer(from.accessToken))
+        .send({ friendCode }),
+
+    /** Writes a friendship row directly, for tests that aren't about sending requests. */
+    seedFriendship: (
+      requester: Person,
+      addressee: Person,
+      status: FriendshipStatus = FriendshipStatus.PENDING,
+    ) =>
+      t.prisma.friendship.create({
+        data: {
+          requesterId: requester.userId,
+          addresseeId: addressee.userId,
+          status,
+          acceptedAt: status === FriendshipStatus.ACCEPTED ? new Date() : null,
+        },
+      }),
+
+    pairRows: (a: Person, b: Person) =>
+      t.prisma.friendship.findMany({
+        where: {
+          OR: [
+            { requesterId: a.userId, addresseeId: b.userId },
+            { requesterId: b.userId, addresseeId: a.userId },
+          ],
+        },
+      }),
+
+    userIds: (res: Response) =>
+      res.body.items.map((item: { user: { id: string } }) => item.user.id),
+  };
+}

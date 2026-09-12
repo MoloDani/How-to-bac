@@ -1,18 +1,6 @@
 import type { Prisma } from '../generated/prisma/client.js';
-import type { Role, Subject } from '../generated/prisma/enums.js';
-
-/** All other users ever see of an author — never their email. */
-export const authorSelect = {
-  id: true,
-  userName: true,
-  role: true,
-} satisfies Prisma.UserSelect;
-
-export interface Author {
-  id: string;
-  userName: string;
-  role: Role;
-}
+import type { Subject } from '../generated/prisma/enums.js';
+import { userSummarySelect, type UserSummary } from '../users/public-user.js';
 
 export const threadSelect = {
   id: true,
@@ -23,7 +11,7 @@ export const threadSelect = {
   locked: true,
   lastMessageAt: true,
   createdAt: true,
-  author: { select: authorSelect },
+  author: { select: userSummarySelect },
   _count: { select: { messages: { where: { deletedAt: null } } } },
 } satisfies Prisma.ThreadSelect;
 
@@ -35,7 +23,7 @@ export interface ThreadSummary {
   id: string;
   subject: Subject;
   title: string;
-  author: Author | null;
+  author: UserSummary | null;
   pinned: boolean;
   locked: boolean;
   messageCount: number;
@@ -64,7 +52,7 @@ export const messageSelect = {
   editedAt: true,
   deletedAt: true,
   createdAt: true,
-  author: { select: authorSelect },
+  author: { select: userSummarySelect },
 } satisfies Prisma.MessageSelect;
 
 export type MessageRow = Prisma.MessageGetPayload<{
@@ -74,7 +62,7 @@ export type MessageRow = Prisma.MessageGetPayload<{
 export interface MessageView {
   id: string;
   threadId: string;
-  author: Author | null;
+  author: UserSummary | null;
   /** null once deleted — the message stays as a placeholder so replies still make sense. */
   content: string | null;
   replyToId: string | null;
@@ -94,24 +82,5 @@ export const toMessageView = (row: MessageRow): MessageView => {
     edited: row.editedAt !== null,
     deleted,
     createdAt: row.createdAt,
-  };
-};
-
-export interface Page<T> {
-  items: T[];
-  nextCursor: string | null;
-}
-
-/** Rows were fetched with `take: limit + 1`; the extra one only signals another page. */
-export const toPage = <Row extends { id: string }, T>(
-  rows: Row[],
-  limit: number,
-  map: (row: Row) => T,
-): Page<T> => {
-  const hasMore = rows.length > limit;
-  const page = hasMore ? rows.slice(0, limit) : rows;
-  return {
-    items: page.map(map),
-    nextCursor: hasMore ? page[page.length - 1].id : null,
   };
 };

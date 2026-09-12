@@ -47,16 +47,22 @@ model User {
   passwordHash    String    @map("password_hash")
   userName        String    @map("user_name") @db.VarChar(64)
   role            Role      @default(USER)
+  /// Shared with others so they can send a friend request (see src/users/friend-code.ts).
+  friendCode      String    @unique @map("friend_code") @db.VarChar(8)
   emailVerifiedAt DateTime? @map("email_verified_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  subjects        UserSubject[]  @relation("SubjectOwner")
-  grantedSubjects UserSubject[]  @relation("SubjectGrantor")
-  refreshTokens   RefreshToken[]
-  authTokens      AuthToken[]
-  threads         Thread[]
-  messages        Message[]
+  subjects           UserSubject[]  @relation("SubjectOwner")
+  grantedSubjects    UserSubject[]  @relation("SubjectGrantor")
+  refreshTokens      RefreshToken[]
+  authTokens         AuthToken[]
+  threads            Thread[]
+  messages           Message[]
+  friendRequestsSent Friendship[]   @relation("FriendshipRequester")
+  friendRequestsGot  Friendship[]   @relation("FriendshipAddressee")
+  blocksMade         UserBlock[]    @relation("BlocksMade")
+  blocksReceived     UserBlock[]    @relation("BlocksReceived")
 
   @@map("users")
 }
@@ -152,4 +158,43 @@ model Message {
 
   @@index([threadId, id])
   @@map("thread_messages")
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+/// At most one row per pair of users, whoever asked first: the migration adds a
+/// unique index on (LEAST, GREATEST) of the two ids, which Prisma can't express.
+/// Declining, cancelling and unfriending delete the row.
+model Friendship {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  requesterId String           @map("requester_id") @db.Uuid
+  addresseeId String           @map("addressee_id") @db.Uuid
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  acceptedAt  DateTime?        @map("accepted_at")
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@index([requesterId, status])
+  @@index([addresseeId, status])
+  @@map("friendships")
+}
+
+/// A one-way block: blocker stops receiving friend requests from blocked.
+model UserBlock {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
 }

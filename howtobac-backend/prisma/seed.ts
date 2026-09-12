@@ -4,6 +4,7 @@ import argon2 from 'argon2';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { Role } from '../src/generated/prisma/enums.js';
 import { createPgAdapter } from '../src/prisma/pg-adapter.js';
+import { generateFriendCode } from '../src/users/friend-code.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 const email = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
@@ -42,6 +43,7 @@ try {
         userName: 'Admin',
         role: Role.ADMIN,
         emailVerifiedAt: new Date(),
+        friendCode: generateFriendCode(),
       },
     });
     console.log(`Created admin ${email}`);
