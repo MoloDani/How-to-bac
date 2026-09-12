@@ -6,6 +6,9 @@ export const MAX_USER_SUBJECTS = 3;
 
 export const subjectSchema = z.enum(Subject);
 
+/** A subject in a URL, any case: /subjects/mathematics/threads. */
+export const subjectParamSchema = z.string().toUpperCase().pipe(subjectSchema);
+
 /** Any number of subjects, duplicates removed. Used by admins. */
 export const subjectListSchema = z
   .array(subjectSchema)

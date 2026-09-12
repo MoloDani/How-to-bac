@@ -51,10 +51,12 @@ model User {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  subjects      UserSubject[]  @relation("SubjectOwner")
-  grantedSubjects UserSubject[] @relation("SubjectGrantor")
-  refreshTokens RefreshToken[]
-  authTokens    AuthToken[]
+  subjects        UserSubject[]  @relation("SubjectOwner")
+  grantedSubjects UserSubject[]  @relation("SubjectGrantor")
+  refreshTokens   RefreshToken[]
+  authTokens      AuthToken[]
+  threads         Thread[]
+  messages        Message[]
 
   @@map("users")
 }
@@ -105,4 +107,49 @@ model AuthToken {
 
   @@index([userId, purpose])
   @@map("auth_tokens")
+}
+
+/// A discussion topic in a subject (later also linked to a lesson).
+/// Deleting only sets deletedAt: the thread and its messages stay in the table.
+model Thread {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  subject       Subject
+  /// null once the author's account is removed
+  authorId      String?   @map("author_id") @db.Uuid
+  title         String    @db.VarChar(120)
+  pinned        Boolean   @default(false)
+  locked        Boolean   @default(false)
+  /// Bumped on every new message; the thread list is sorted by it.
+  lastMessageAt DateTime  @default(now()) @map("last_message_at")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  author   User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  @@index([subject, pinned, lastMessageAt])
+  @@map("threads")
+}
+
+/// A message in a thread. The thread's opening post is an ordinary message.
+model Message {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  threadId  String    @map("thread_id") @db.Uuid
+  /// null once the author's account is removed
+  authorId  String?   @map("author_id") @db.Uuid
+  content   String    @db.VarChar(4000)
+  /// Discord-style reply to another message in the same thread.
+  replyToId String?   @map("reply_to_id") @db.Uuid
+  editedAt  DateTime? @map("edited_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  thread  Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author  User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  replyTo Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies Message[] @relation("MessageReplies")
+
+  @@index([threadId, id])
+  @@map("thread_messages")
 }

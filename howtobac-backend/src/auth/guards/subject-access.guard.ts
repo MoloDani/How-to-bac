@@ -6,7 +6,7 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { subjectSchema } from '../../common/subjects.js';
+import { subjectParamSchema } from '../../common/subjects.js';
 import { canAccessSubject } from '../access-policy.js';
 import type { AuthenticatedRequest } from '../auth.types.js';
 import {
@@ -27,9 +27,7 @@ export class SubjectAccessGuard implements CanActivate {
     if (!rule) return true;
 
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const subject = subjectSchema.safeParse(
-      String(req.params[rule.param] ?? '').toUpperCase(),
-    );
+    const subject = subjectParamSchema.safeParse(req.params[rule.param]);
     if (!subject.success) throw new BadRequestException('invalid_subject');
 
     if (!canAccessSubject(req.user, rule.action, subject.data)) {

@@ -35,3 +35,10 @@ export const AccountThrottle = () => SetMetadata(ACCOUNT_THROTTLE_KEY, true);
 /** Token-bearing routes have no email to key on, so tighten the per-IP limit. */
 export const TokenThrottle = () =>
   Throttle({ default: { limit: 10, ttl: 15 * MINUTE } });
+
+/**
+ * Posting limit per IP per route. Per IP because ThrottlerGuard runs before
+ * JwtAuthGuard, so the user isn't known yet.
+ */
+export const PostThrottle = (perMinute: number) =>
+  Throttle({ default: { limit: perMinute, ttl: MINUTE } });

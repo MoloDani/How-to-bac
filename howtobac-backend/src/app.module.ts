@@ -12,6 +12,7 @@ import { validateEnv } from './config/env.js';
 import { MailModule } from './mail/mail.module.js';
 import { observeImports } from './observe.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { ThreadsModule } from './threads/threads.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module.js';
     MailModule,
     AuthModule,
     UsersModule,
+    ThreadsModule,
   ],
   controllers: [AppController],
   providers: [
