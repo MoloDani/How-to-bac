@@ -13,7 +13,19 @@ const KEYS: Record<string, string> = {
   subjects_managed_by_admin: 'errors.subjectsManagedByAdmin',
   insufficient_role: 'errors.insufficientRole',
   user_not_found: 'errors.userNotFound',
-  // Friends (used once those screens land)
+  // Threads
+  thread_not_found: 'errors.threadNotFound',
+  message_not_found: 'errors.messageNotFound',
+  thread_locked: 'errors.threadLocked',
+  not_author: 'errors.notAuthor',
+  not_moderator: 'errors.notModerator',
+  reply_to_not_in_thread: 'errors.replyToNotInThread',
+  subject_access_denied: 'errors.subjectAccessDenied',
+  invalid_subject: 'errors.invalidSubject',
+  // Friends
+  not_friends: 'errors.notFriends',
+  request_not_found: 'errors.requestNotFound',
+  cannot_block_self: 'errors.cannotBlockSelf',
   friend_code_not_found: 'errors.friendCodeNotFound',
   cannot_friend_self: 'errors.cannotFriendSelf',
   already_friends: 'errors.alreadyFriends',

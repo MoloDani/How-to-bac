@@ -16,7 +16,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetRouteImport } from './routes/reset'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppSubjectsIndexRouteImport } from './routes/_app/subjects.index'
+import { Route as AppSubjectsSubjectRouteImport } from './routes/_app/subjects.$subject'
+import { Route as AppThreadsThreadIdRouteImport } from './routes/_app/threads.$threadId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,9 +56,29 @@ const VerifyRoute = VerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppFriendsRoute = AppFriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSubjectsIndexRoute = AppSubjectsIndexRouteImport.update({
+  id: '/subjects/',
+  path: '/subjects/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSubjectsSubjectRoute = AppSubjectsSubjectRouteImport.update({
+  id: '/subjects/$subject',
+  path: '/subjects/$subject',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppThreadsThreadIdRoute = AppThreadsThreadIdRouteImport.update({
+  id: '/threads/$threadId',
+  path: '/threads/$threadId',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -65,7 +89,11 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/verify': typeof VerifyRoute
+  '/friends': typeof AppFriendsRoute
   '/profile': typeof AppProfileRoute
+  '/subjects/$subject': typeof AppSubjectsSubjectRoute
+  '/threads/$threadId': typeof AppThreadsThreadIdRoute
+  '/subjects/': typeof AppSubjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,7 +102,11 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/verify': typeof VerifyRoute
+  '/friends': typeof AppFriendsRoute
   '/profile': typeof AppProfileRoute
+  '/subjects/$subject': typeof AppSubjectsSubjectRoute
+  '/threads/$threadId': typeof AppThreadsThreadIdRoute
+  '/subjects': typeof AppSubjectsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +117,11 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/verify': typeof VerifyRoute
+  '/_app/friends': typeof AppFriendsRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/subjects/$subject': typeof AppSubjectsSubjectRoute
+  '/_app/threads/$threadId': typeof AppThreadsThreadIdRoute
+  '/_app/subjects/': typeof AppSubjectsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,7 +132,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset'
     | '/verify'
+    | '/friends'
     | '/profile'
+    | '/subjects/$subject'
+    | '/threads/$threadId'
+    | '/subjects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -105,7 +145,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset'
     | '/verify'
+    | '/friends'
     | '/profile'
+    | '/subjects/$subject'
+    | '/threads/$threadId'
+    | '/subjects'
   id:
     | '__root__'
     | '/'
@@ -115,7 +159,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset'
     | '/verify'
+    | '/_app/friends'
     | '/_app/profile'
+    | '/_app/subjects/$subject'
+    | '/_app/threads/$threadId'
+    | '/_app/subjects/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/friends': {
+      id: '/_app/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof AppFriendsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
@@ -186,15 +241,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/subjects/': {
+      id: '/_app/subjects/'
+      path: '/subjects'
+      fullPath: '/subjects/'
+      preLoaderRoute: typeof AppSubjectsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/subjects/$subject': {
+      id: '/_app/subjects/$subject'
+      path: '/subjects/$subject'
+      fullPath: '/subjects/$subject'
+      preLoaderRoute: typeof AppSubjectsSubjectRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/threads/$threadId': {
+      id: '/_app/threads/$threadId'
+      path: '/threads/$threadId'
+      fullPath: '/threads/$threadId'
+      preLoaderRoute: typeof AppThreadsThreadIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppFriendsRoute: typeof AppFriendsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppSubjectsSubjectRoute: typeof AppSubjectsSubjectRoute
+  AppThreadsThreadIdRoute: typeof AppThreadsThreadIdRoute
+  AppSubjectsIndexRoute: typeof AppSubjectsIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppFriendsRoute: AppFriendsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppSubjectsSubjectRoute: AppSubjectsSubjectRoute,
+  AppThreadsThreadIdRoute: AppThreadsThreadIdRoute,
+  AppSubjectsIndexRoute: AppSubjectsIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -28,9 +28,22 @@ export function SiteHeader() {
   return (
     <header className="border-border/60 bg-background/80 sticky top-0 z-30 border-b backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-4xl items-center gap-2 px-4">
-        <Link to="/" className="mr-auto font-bold tracking-tight">
+        <Link to="/" className="font-bold tracking-tight">
           {t('common.appName')}
         </Link>
+
+        {user ? (
+          <nav className="text-muted-foreground mr-auto flex items-center gap-4 text-sm">
+            <Link to="/subjects" className="hover:text-foreground">
+              {t('nav.subjects')}
+            </Link>
+            <Link to="/friends" className="hover:text-foreground">
+              {t('nav.friends')}
+            </Link>
+          </nav>
+        ) : (
+          <div className="mr-auto" />
+        )}
 
         <LanguageSwitcher />
         <ThemeToggle />
