@@ -1,0 +1,134 @@
+{
+  "common": {
+    "appName": "How to Bac",
+    "save": "Salvează",
+    "saving": "Se salvează…",
+    "loading": "Se încarcă…",
+    "copy": "Copiază",
+    "copied": "Copiat",
+    "signIn": "Autentificare",
+    "signOut": "Deconectare",
+    "back": "Înapoi"
+  },
+  "nav": {
+    "profile": "Profil"
+  },
+  "theme": {
+    "label": "Temă",
+    "light": "Luminoasă",
+    "dark": "Întunecată",
+    "system": "După sistem"
+  },
+  "language": {
+    "label": "Limbă"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Parolă",
+    "login": {
+      "title": "Bine ai revenit",
+      "subtitle": "Autentifică-te ca să îți vezi materiile.",
+      "submit": "Intră în cont",
+      "forgot": "Ai uitat parola?",
+      "noAccount": "Nu ai cont?",
+      "register": "Creează unul",
+      "unverified": "Trebuie să îți confirmi adresa de email înainte de autentificare.",
+      "resend": "Trimite din nou emailul",
+      "resent": "Ți-am trimis un email nou. Verifică-ți inbox-ul."
+    },
+    "register": {
+      "title": "Creează-ți contul",
+      "subtitle": "Ai nevoie doar de un email și o parolă.",
+      "userName": "Nume",
+      "submit": "Creează cont",
+      "haveAccount": "Ai deja cont?",
+      "checkInbox": "Verifică-ți emailul",
+      "checkInboxBody": "Dacă adresa este validă, ți-am trimis un link de confirmare. Linkul expiră în 24 de ore."
+    },
+    "forgot": {
+      "title": "Resetare parolă",
+      "subtitle": "Îți trimitem un link de resetare.",
+      "submit": "Trimite linkul",
+      "sent": "Dacă adresa există, ți-am trimis un link. Linkul expiră într-o oră."
+    },
+    "verify": {
+      "working": "Se confirmă adresa…",
+      "success": "Adresa a fost confirmată",
+      "successBody": "Acum te poți autentifica.",
+      "failed": "Linkul nu mai este valid",
+      "failedBody": "Linkurile expiră în 24 de ore și pot fi folosite o singură dată. Autentifică-te ca să primești altul."
+    },
+    "reset": {
+      "title": "Alege o parolă nouă",
+      "newPassword": "Parolă nouă",
+      "submit": "Salvează parola",
+      "success": "Parola a fost schimbată",
+      "successBody": "Te-am deconectat de pe celelalte dispozitive."
+    }
+  },
+  "profile": {
+    "title": "Profilul meu",
+    "account": "Cont",
+    "nameLabel": "Nume afișat",
+    "nameSaved": "Numele a fost salvat.",
+    "verified": "Email confirmat",
+    "unverified": "Email neconfirmat",
+    "role": {
+      "ADMIN": "Administrator",
+      "CONTRIBUTOR": "Contributor",
+      "USER": "Elev"
+    },
+    "subjects": {
+      "title": "Materiile mele",
+      "hint": "Alege până la {{count}} materii.",
+      "managed": "Materiile tale sunt gestionate de un administrator.",
+      "saved": "Materiile au fost salvate.",
+      "limitReached": "Poți alege cel mult {{count}} materii."
+    },
+    "friendCode": {
+      "title": "Codul meu de prieten",
+      "hint": "Trimite-l cuiva ca să îți poată da cerere de prietenie.",
+      "rotate": "Generează cod nou",
+      "rotated": "Ai un cod nou. Cel vechi nu mai funcționează."
+    }
+  },
+  "subjects": {
+    "MATHEMATICS": "Matematică",
+    "ROMANIAN": "Limba română",
+    "HISTORY": "Istorie",
+    "PHYSICS": "Fizică",
+    "ORGANIC_CHEMISTRY": "Chimie organică",
+    "INORGANIC_CHEMISTRY": "Chimie anorganică",
+    "PLANT_ANIMAL_BIOLOGY": "Biologie vegetală și animală",
+    "HUMAN_ANATOMY_GENETICS": "Anatomie și genetică",
+    "COMPUTER_SCIENCE": "Informatică",
+    "GEOGRAPHY": "Geografie",
+    "LOGIC": "Logică",
+    "PSYCHOLOGY": "Psihologie",
+    "SOCIOLOGY": "Sociologie",
+    "ECONOMICS": "Economie",
+    "PHILOSOPHY": "Filosofie"
+  },
+  "errors": {
+    "invalidCredentials": "Email sau parolă greșită.",
+    "emailNotVerified": "Confirmă-ți adresa de email înainte de autentificare.",
+    "invalidToken": "Linkul nu mai este valid sau a expirat.",
+    "sessionExpired": "Sesiunea a expirat. Autentifică-te din nou.",
+    "validation": "Verifică datele introduse.",
+    "emailInvalid": "Adresă de email invalidă.",
+    "passwordTooShort": "Parola trebuie să aibă cel puțin 8 caractere.",
+    "required": "Completează acest câmp.",
+    "nameTooLong": "Numele poate avea cel mult 64 de caractere.",
+    "tooManyRequests": "Prea multe încercări. Încearcă din nou peste câteva minute.",
+    "subjectsManagedByAdmin": "Materiile tale sunt gestionate de un administrator.",
+    "insufficientRole": "Nu ai drepturi pentru această acțiune.",
+    "userNotFound": "Utilizatorul nu a fost găsit.",
+    "friendCodeNotFound": "Codul nu corespunde niciunui cont.",
+    "cannotFriendSelf": "Nu îți poți da ție cerere de prietenie.",
+    "alreadyFriends": "Sunteți deja prieteni.",
+    "requestAlreadySent": "Ai trimis deja o cerere.",
+    "userBlocked": "L-ai blocat pe acest utilizator.",
+    "network": "Nu am putut contacta serverul.",
+    "unexpected": "Ceva nu a mers bine. Încearcă din nou."
+  }
+}

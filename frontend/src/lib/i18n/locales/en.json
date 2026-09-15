@@ -1,0 +1,134 @@
+{
+  "common": {
+    "appName": "How to Bac",
+    "save": "Save",
+    "saving": "Saving…",
+    "loading": "Loading…",
+    "copy": "Copy",
+    "copied": "Copied",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "back": "Back"
+  },
+  "nav": {
+    "profile": "Profile"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to see your subjects.",
+      "submit": "Sign in",
+      "forgot": "Forgot your password?",
+      "noAccount": "No account yet?",
+      "register": "Create one",
+      "unverified": "Confirm your email address before signing in.",
+      "resend": "Send the email again",
+      "resent": "Sent. Check your inbox."
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "All you need is an email and a password.",
+      "userName": "Name",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "checkInbox": "Check your email",
+      "checkInboxBody": "If the address is valid, we sent a confirmation link. It expires in 24 hours."
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "We'll email you a reset link.",
+      "submit": "Send the link",
+      "sent": "If the address exists, we sent a link. It expires in an hour."
+    },
+    "verify": {
+      "working": "Confirming your email…",
+      "success": "Email confirmed",
+      "successBody": "You can sign in now.",
+      "failed": "This link no longer works",
+      "failedBody": "Links expire after 24 hours and can only be used once. Sign in to get a new one."
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "newPassword": "New password",
+      "submit": "Save password",
+      "success": "Password changed",
+      "successBody": "You've been signed out everywhere else."
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "account": "Account",
+    "nameLabel": "Display name",
+    "nameSaved": "Name saved.",
+    "verified": "Email confirmed",
+    "unverified": "Email not confirmed",
+    "role": {
+      "ADMIN": "Administrator",
+      "CONTRIBUTOR": "Contributor",
+      "USER": "Student"
+    },
+    "subjects": {
+      "title": "My subjects",
+      "hint": "Pick up to {{count}} subjects.",
+      "managed": "An administrator manages your subjects.",
+      "saved": "Subjects saved.",
+      "limitReached": "You can pick at most {{count}} subjects."
+    },
+    "friendCode": {
+      "title": "My friend code",
+      "hint": "Share it so someone can send you a friend request.",
+      "rotate": "Generate a new code",
+      "rotated": "New code ready. The old one no longer works."
+    }
+  },
+  "subjects": {
+    "MATHEMATICS": "Mathematics",
+    "ROMANIAN": "Romanian",
+    "HISTORY": "History",
+    "PHYSICS": "Physics",
+    "ORGANIC_CHEMISTRY": "Organic chemistry",
+    "INORGANIC_CHEMISTRY": "Inorganic chemistry",
+    "PLANT_ANIMAL_BIOLOGY": "Plant & animal biology",
+    "HUMAN_ANATOMY_GENETICS": "Human anatomy & genetics",
+    "COMPUTER_SCIENCE": "Computer science",
+    "GEOGRAPHY": "Geography",
+    "LOGIC": "Logic",
+    "PSYCHOLOGY": "Psychology",
+    "SOCIOLOGY": "Sociology",
+    "ECONOMICS": "Economics",
+    "PHILOSOPHY": "Philosophy"
+  },
+  "errors": {
+    "invalidCredentials": "Wrong email or password.",
+    "emailNotVerified": "Confirm your email address before signing in.",
+    "invalidToken": "This link is invalid or has expired.",
+    "sessionExpired": "Your session expired. Please sign in again.",
+    "validation": "Check the details you entered.",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "required": "This field is required.",
+    "nameTooLong": "Name can be at most 64 characters.",
+    "tooManyRequests": "Too many attempts. Try again in a few minutes.",
+    "subjectsManagedByAdmin": "An administrator manages your subjects.",
+    "insufficientRole": "You don't have permission for that.",
+    "userNotFound": "User not found.",
+    "friendCodeNotFound": "No account matches that code.",
+    "cannotFriendSelf": "You can't send yourself a friend request.",
+    "alreadyFriends": "You're already friends.",
+    "requestAlreadySent": "You've already sent a request.",
+    "userBlocked": "You blocked this user.",
+    "network": "Couldn't reach the server.",
+    "unexpected": "Something went wrong. Please try again."
+  }
+}
