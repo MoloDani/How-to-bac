@@ -1,4 +1,7 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/v1'
+// Relative by default, so the app calls whichever host it was opened on
+// (apex or www) and never trips over CORS. `||` not `??`: an empty
+// VITE_API_URL should fall back too.
+const BASE_URL = import.meta.env.VITE_API_URL || '/v1'
 
 /**
  * Kept in memory only. In localStorage any script on the page could read it;
