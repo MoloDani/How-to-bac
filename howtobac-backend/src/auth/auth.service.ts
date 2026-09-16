@@ -7,10 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuthTokenPurpose } from '../generated/prisma/enums.js';
 import { MailService } from '../mail/mail.service.js';
-import {
-  isUniqueViolation,
-  isUniqueViolationOn,
-} from '../prisma/prisma-errors.js';
+import { isUniqueViolation } from '../prisma/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   publicUserSelect,
@@ -72,12 +69,13 @@ export class AuthService {
       });
       await this.sendVerification(user.id, dto.email);
     } catch (err) {
-      // Tags are public, so naming the clash gives nothing away — unlike the
-      // email, where a concurrent sign-up stays as silent as an existing one.
-      if (isUniqueViolationOn(err, 'tag')) {
+      if (!isUniqueViolation(err)) throw err;
+      // The driver adapter doesn't report which column clashed, so ask. Tags
+      // are public, and naming that clash gives nothing away; an email clash
+      // stays as silent here as it is above.
+      if (!(await this.isTagAvailable(dto.tag))) {
         throw new ConflictException('tag_taken');
       }
-      if (!isUniqueViolation(err)) throw err;
     }
   }
 

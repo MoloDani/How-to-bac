@@ -7,7 +7,7 @@ import {
 import type { AuthUser } from '../auth/auth.types.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { Role, type Subject } from '../generated/prisma/enums.js';
-import { isUniqueViolationOn } from '../prisma/prisma-errors.js';
+import { isUniqueViolation } from '../prisma/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   publicUserSelect,
@@ -33,9 +33,8 @@ export class UsersService {
       });
       return toPublicUser(user);
     } catch (err) {
-      if (isUniqueViolationOn(err, 'tag')) {
-        throw new ConflictException('tag_taken');
-      }
+      // The tag is the only unique column this can touch.
+      if (isUniqueViolation(err)) throw new ConflictException('tag_taken');
       throw err;
     }
   }

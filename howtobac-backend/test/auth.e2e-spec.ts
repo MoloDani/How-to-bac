@@ -129,8 +129,10 @@ describe('Auth (e2e)', () => {
   });
 
   it('keeps tags unique, at sign-up and afterwards', async () => {
+    // Written directly: verify-email is rate limited per IP, and this spec
+    // already spends most of that budget.
     const taken = newEmail('tagowner');
-    await t.registerAndVerify(taken);
+    await t.createUser(taken);
 
     // Unlike a taken email, a taken tag is public, so sign-up says so.
     const clash = await http()
@@ -160,7 +162,7 @@ describe('Auth (e2e)', () => {
       .expect(200, { available: false });
 
     const other = newEmail('tagmover');
-    await t.registerAndVerify(other);
+    await t.createUser(other);
     const session = await t.login(other);
 
     const conflict = await http()

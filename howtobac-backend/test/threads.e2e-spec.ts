@@ -109,6 +109,7 @@ describe('Threads (e2e)', () => {
     expect(Object.keys(res.body.author).sort()).toEqual([
       'id',
       'role',
+      'tag',
       'userName',
     ]);
     const threadId = res.body.id;
