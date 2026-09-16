@@ -7,6 +7,7 @@ import {
   newEmail,
   PASSWORD,
   refreshCookie,
+  tagFor,
   type TestApp,
 } from './helpers.js';
 
@@ -52,6 +53,7 @@ describe('Auth (e2e)', () => {
         email: `  ${email.toUpperCase()} `,
         password: PASSWORD,
         userName: 'Ana',
+        tag: ` @${tagFor(email).toUpperCase()} `,
       })
       .expect(202, { ok: true });
 
@@ -78,6 +80,7 @@ describe('Auth (e2e)', () => {
     expect(res.body.user).toMatchObject({
       email,
       userName: 'Ana',
+      tag: tagFor(email),
       role: Role.USER,
       emailVerified: true,
     });
@@ -112,12 +115,73 @@ describe('Auth (e2e)', () => {
 
     await http()
       .post('/v1/auth/register')
-      .send({ email, password: 'another-password', userName: 'Imposter' })
+      .send({
+        email,
+        password: 'another-password',
+        userName: 'Imposter',
+        tag: tagFor(`imposter-${email}`),
+      })
       .expect(202, { ok: true });
     expect(t.mail.count('exists', email)).toBe(1);
 
     // The original password still works.
     await t.login(email);
+  });
+
+  it('keeps tags unique, at sign-up and afterwards', async () => {
+    const taken = newEmail('tagowner');
+    await t.registerAndVerify(taken);
+
+    // Unlike a taken email, a taken tag is public, so sign-up says so.
+    const clash = await http()
+      .post('/v1/auth/register')
+      .send({
+        email: newEmail('tagclash'),
+        password: PASSWORD,
+        userName: 'Ana',
+        tag: tagFor(taken),
+      })
+      .expect(409);
+    expect(clash.body.message).toBe('tag_taken');
+
+    const free = await http()
+      .get('/v1/auth/tag-available')
+      .query({ tag: `@${tagFor(taken).toUpperCase()}` })
+      .expect(200);
+    expect(free.body).toEqual({ available: false });
+    await http()
+      .get('/v1/auth/tag-available')
+      .query({ tag: 'nobody_has_this_one' })
+      .expect(200, { available: true });
+    // Unusable tags are simply unavailable, not a validation error.
+    await http()
+      .get('/v1/auth/tag-available')
+      .query({ tag: 'admin' })
+      .expect(200, { available: false });
+
+    const other = newEmail('tagmover');
+    await t.registerAndVerify(other);
+    const session = await t.login(other);
+
+    const conflict = await http()
+      .patch('/v1/me')
+      .set(bearer(session.accessToken))
+      .send({ tag: tagFor(taken) })
+      .expect(409);
+    expect(conflict.body.message).toBe('tag_taken');
+
+    await http()
+      .patch('/v1/me')
+      .set(bearer(session.accessToken))
+      .send({ tag: 'admin' })
+      .expect(400);
+
+    const renamed = await http()
+      .patch('/v1/me')
+      .set(bearer(session.accessToken))
+      .send({ tag: `@${tagFor(other).toUpperCase()}_2` })
+      .expect(200);
+    expect(renamed.body.tag).toBe(`${tagFor(other)}_2`);
   });
 
   it('rotates refresh tokens and revokes the family on reuse', async () => {

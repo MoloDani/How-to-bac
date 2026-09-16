@@ -40,9 +40,9 @@ describe('Blocks and relationship state (e2e)', () => {
     expect(await f.pairRows(ivy, jack)).toHaveLength(0);
 
     // Jack can't tell he's blocked: the code just looks wrong.
-    const hidden = await f.sendRequest(jack, ivy.friendCode).expect(404);
-    expect(hidden.body.message).toBe('friend_code_not_found');
-    const own = await f.sendRequest(ivy, jack.friendCode).expect(409);
+    const hidden = await f.sendRequest(jack, ivy.tag).expect(404);
+    expect(hidden.body.message).toBe('tag_not_found');
+    const own = await f.sendRequest(ivy, jack.tag).expect(409);
     expect(own.body.message).toBe('user_blocked');
 
     const blocks = await http()
@@ -69,7 +69,7 @@ describe('Blocks and relationship state (e2e)', () => {
       .delete(`/v1/blocks/${jack.userId}`)
       .set(bearer(ivy.accessToken))
       .expect(204);
-    await f.sendRequest(jack, ivy.friendCode).expect(201);
+    await f.sendRequest(jack, ivy.tag).expect(201);
   });
 
   it('reports the relationship from each side', async () => {
@@ -85,7 +85,7 @@ describe('Blocks and relationship state (e2e)', () => {
 
     expect(await stateOf(kim, leo)).toBe('NONE');
 
-    await f.sendRequest(kim, leo.friendCode).expect(201);
+    await f.sendRequest(kim, leo.tag).expect(201);
     expect(await stateOf(kim, leo)).toBe('REQUEST_SENT');
     expect(await stateOf(leo, kim)).toBe('REQUEST_RECEIVED');
 

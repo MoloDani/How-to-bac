@@ -1,5 +1,15 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AccountThrottle, TokenThrottle } from '../common/throttle.js';
 import {
@@ -7,11 +17,13 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  tagAvailableQuerySchema,
   tokenOnlySchema,
   type EmailOnlyDto,
   type LoginDto,
   type RegisterDto,
   type ResetPasswordDto,
+  type TagAvailableQuery,
   type TokenOnlyDto,
 } from './auth.schemas.js';
 import { AuthService } from './auth.service.js';
@@ -33,6 +45,18 @@ export class AuthController {
   async register(@Body({ schema: registerSchema }) dto: RegisterDto) {
     await this.auth.register(dto);
     return { ok: true };
+  }
+
+  /**
+   * Live check for the sign-up form. Tags are public, so this reveals nothing
+   * an account page wouldn't; the limit is only there to stop bulk scraping.
+   */
+  @Get('tag-available')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  async tagAvailable(
+    @Query({ schema: tagAvailableQuerySchema }) query: TagAvailableQuery,
+  ) {
+    return { available: await this.auth.isTagAvailable(query.tag) };
   }
 
   @Post('verify-email')

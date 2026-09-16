@@ -12,13 +12,16 @@ import {
 } from '../src/generated/prisma/enums.js';
 import { MailService } from '../src/mail/mail.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
-import { generateFriendCode } from '../src/users/friend-code.js';
+import { suggestTag } from '../src/users/user-tag.js';
 
 export const PASSWORD = 'correct-horse-battery';
 
 let seq = 0;
 export const newEmail = (label: string) =>
   `${label}-${Date.now()}-${seq++}@example.com`;
+
+/** Emails are unique per test run, so a tag derived from one is too. */
+export const tagFor = (email: string) => suggestTag(email.split('@')[0]);
 
 export const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
 
@@ -89,7 +92,7 @@ export async function createTestApp(extraControllers: Type[] = []) {
         userName: role === Role.ADMIN ? 'Admin' : 'Test',
         role,
         emailVerifiedAt: new Date(),
-        friendCode: generateFriendCode(),
+        tag: tagFor(email),
       },
     });
   };
@@ -107,7 +110,13 @@ export async function createTestApp(extraControllers: Type[] = []) {
     async registerAndVerify(email: string, subjects: Subject[] = []) {
       await http()
         .post('/v1/auth/register')
-        .send({ email, password: PASSWORD, userName: 'Test', subjects })
+        .send({
+          email,
+          password: PASSWORD,
+          userName: 'Test',
+          tag: tagFor(email),
+          subjects,
+        })
         .expect(202);
       await http()
         .post('/v1/auth/verify-email')
@@ -148,7 +157,7 @@ export async function createTestApp(extraControllers: Type[] = []) {
 export type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 
 export interface Person extends LoggedIn {
-  friendCode: string;
+  tag: string;
 }
 
 /** Shared setup for the friends and blocks specs. */
@@ -156,23 +165,23 @@ export function friendTools(t: TestApp) {
   const http = () => t.http();
 
   return {
-    /** A fresh verified user, logged in, with their friend code. */
+    /** A fresh verified user, logged in, with their tag. */
     async person(label: string): Promise<Person> {
       const email = newEmail(label);
       await t.createUser(email);
       const session = await t.login(email);
-      const { friendCode } = await t.prisma.user.findUniqueOrThrow({
+      const { tag } = await t.prisma.user.findUniqueOrThrow({
         where: { email },
-        select: { friendCode: true },
+        select: { tag: true },
       });
-      return { ...session, friendCode };
+      return { ...session, tag };
     },
 
-    sendRequest: (from: Person, friendCode: string) =>
+    sendRequest: (from: Person, tag: string) =>
       http()
         .post('/v1/friends/requests')
         .set(bearer(from.accessToken))
-        .send({ friendCode }),
+        .send({ tag }),
 
     /** Writes a friendship row directly, for tests that aren't about sending requests. */
     seedFriendship: (

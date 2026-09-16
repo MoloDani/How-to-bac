@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Patch,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Get, Patch, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { AuthUser } from '../auth/auth.types.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -31,6 +23,7 @@ export class MeController {
   }
 
   @Patch()
+  @PostThrottle(10)
   update(
     @CurrentUser() user: AuthUser,
     @Body({ schema: updateMeSchema }) dto: UpdateMeDto,
@@ -44,13 +37,5 @@ export class MeController {
     @Body({ schema: setMySubjectsSchema }) dto: SetMySubjectsDto,
   ) {
     return this.users.setOwnSubjects(user, dto.subjects);
-  }
-
-  /** New friend code; the old one stops working immediately. */
-  @Post('friend-code')
-  @HttpCode(200)
-  @PostThrottle(5)
-  rotateFriendCode(@CurrentUser() user: AuthUser) {
-    return this.users.rotateFriendCode(user.id);
   }
 }

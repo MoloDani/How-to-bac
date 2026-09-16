@@ -7,35 +7,37 @@ import {
 import type { AuthUser } from '../auth/auth.types.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { Role, type Subject } from '../generated/prisma/enums.js';
+import { isUniqueViolationOn } from '../prisma/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   publicUserSelect,
   toPublicUser,
   type PublicUser,
 } from './public-user.js';
-import { generateFriendCode } from './friend-code.js';
 import type { ListUsersQuery, UpdateMeDto } from './users.schemas.js';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Changing the tag takes effect at once: the old one stops resolving. */
   async updateProfile(userId: string, dto: UpdateMeDto): Promise<PublicUser> {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { userName: dto.userName },
-      select: publicUserSelect,
-    });
-    return toPublicUser(user);
-  }
-
-  /** New friend code; the old one stops working immediately. */
-  rotateFriendCode(userId: string): Promise<{ friendCode: string }> {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { friendCode: generateFriendCode() },
-      select: { friendCode: true },
-    });
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(dto.userName !== undefined && { userName: dto.userName }),
+          ...(dto.tag !== undefined && { tag: dto.tag }),
+        },
+        select: publicUserSelect,
+      });
+      return toPublicUser(user);
+    } catch (err) {
+      if (isUniqueViolationOn(err, 'tag')) {
+        throw new ConflictException('tag_taken');
+      }
+      throw err;
+    }
   }
 
   /** Regular users pick their own subjects. Everyone else's are admin-managed. */

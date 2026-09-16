@@ -47,8 +47,8 @@ model User {
   passwordHash    String    @map("password_hash")
   userName        String    @map("user_name") @db.VarChar(64)
   role            Role      @default(USER)
-  /// Shared with others so they can send a friend request (see src/users/friend-code.ts).
-  friendCode      String    @unique @map("friend_code") @db.VarChar(8)
+  /// Public handle others use to find and add you. Always lowercase (see src/users/user-tag.ts).
+  tag             String    @unique @db.VarChar(32)
   emailVerifiedAt DateTime? @map("email_verified_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")

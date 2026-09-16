@@ -69,10 +69,7 @@ export class FriendsController {
     @Body({ schema: sendRequestSchema }) dto: SendRequestDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { created, view } = await this.friends.sendRequest(
-      user,
-      dto.friendCode,
-    );
+    const { created, view } = await this.friends.sendRequest(user, dto.tag);
     res.status(created ? 201 : 200);
     return view;
   }

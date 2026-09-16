@@ -62,9 +62,9 @@ export const relationshipQuery = (userId: string) =>
     staleTime: 30_000,
   })
 
-/** Requests can only be sent by friend code — never by user id. */
-export const sendFriendRequest = (friendCode: string) =>
-  api.post<Relationship>('/friends/requests', { friendCode })
+/** Requests are addressed by tag — never by user id. */
+export const sendFriendRequest = (tag: string) =>
+  api.post<Relationship>('/friends/requests', { tag })
 
 export const acceptRequest = (userId: string) =>
   api.post<Relationship>(`/friends/requests/${userId}/accept`)

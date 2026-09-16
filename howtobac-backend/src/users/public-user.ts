@@ -5,12 +5,15 @@ import type { Role, Subject } from '../generated/prisma/enums.js';
 export const userSummarySelect = {
   id: true,
   userName: true,
+  tag: true,
   role: true,
 } satisfies Prisma.UserSelect;
 
 export interface UserSummary {
   id: string;
   userName: string;
+  /** Public handle, shown next to the name and used to add them as a friend. */
+  tag: string;
   role: Role;
 }
 
@@ -19,9 +22,9 @@ export interface PublicUser {
   id: string;
   email: string;
   userName: string;
+  tag: string;
   role: Role;
   subjects: Subject[];
-  friendCode: string;
   emailVerified: boolean;
   createdAt: Date;
 }
@@ -30,8 +33,8 @@ export const publicUserSelect = {
   id: true,
   email: true,
   userName: true,
+  tag: true,
   role: true,
-  friendCode: true,
   emailVerifiedAt: true,
   createdAt: true,
   subjects: { select: { subject: true }, orderBy: { subject: 'asc' } },
@@ -43,9 +46,9 @@ export const toPublicUser = (row: PublicUserRow): PublicUser => ({
   id: row.id,
   email: row.email,
   userName: row.userName,
+  tag: row.tag,
   role: row.role,
   subjects: row.subjects.map((s) => s.subject),
-  friendCode: row.friendCode,
   emailVerified: row.emailVerifiedAt !== null,
   createdAt: row.createdAt,
 });

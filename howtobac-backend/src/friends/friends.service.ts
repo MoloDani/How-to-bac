@@ -116,13 +116,13 @@ export class FriendsService {
   /** `created` tells the controller whether to answer 201 (new request) or 200 (accepted theirs). */
   async sendRequest(
     user: AuthUser,
-    friendCode: string,
+    tag: string,
   ): Promise<{ created: boolean; view: RelationshipView }> {
     const target = await this.prisma.user.findUnique({
-      where: { friendCode },
+      where: { tag },
       select: userSummarySelect,
     });
-    if (!target) throw new NotFoundException('friend_code_not_found');
+    if (!target) throw new NotFoundException('tag_not_found');
     if (target.id === user.id) {
       throw new BadRequestException('cannot_friend_self');
     }
@@ -136,9 +136,9 @@ export class FriendsService {
       },
       select: { blockerId: true },
     });
-    // Being blocked must look exactly like a wrong code.
+    // Being blocked must look exactly like a tag that doesn't exist.
     if (blocks.some((block) => block.blockerId === target.id)) {
-      throw new NotFoundException('friend_code_not_found');
+      throw new NotFoundException('tag_not_found');
     }
     if (blocks.length > 0) throw new ConflictException('user_blocked');
 

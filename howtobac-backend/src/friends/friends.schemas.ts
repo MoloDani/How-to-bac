@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { friendCodeSchema } from '../users/friend-code.js';
+import { tagSchema } from '../users/user-tag.js';
 
 /** Lowercased so a self-check like `userId === user.id` can't be dodged with uppercase. */
 export const userIdParamSchema = z.uuid().transform((id) => id.toLowerCase());
 
-export const sendRequestSchema = z.object({ friendCode: friendCodeSchema });
+export const sendRequestSchema = z.object({ tag: tagSchema });
 export type SendRequestDto = z.output<typeof sendRequestSchema>;
 
 export const listQuerySchema = z.object({

@@ -28,6 +28,7 @@
   "auth": {
     "email": "Email",
     "password": "Password",
+    "confirmPassword": "Confirm password",
     "login": {
       "title": "Welcome back",
       "subtitle": "Sign in to see your subjects.",
@@ -43,6 +44,9 @@
       "title": "Create your account",
       "subtitle": "All you need is an email and a password.",
       "userName": "Name",
+      "tag": "Tag",
+      "tagHint": "How friends find you: lowercase letters, digits, \".\" and \"_\".",
+      "tagFree": "That tag is free.",
       "submit": "Create account",
       "haveAccount": "Already have an account?",
       "checkInbox": "Check your email",
@@ -88,11 +92,11 @@
       "saved": "Subjects saved.",
       "limitReached": "You can pick at most {{count}} subjects."
     },
-    "friendCode": {
-      "title": "My friend code",
-      "hint": "Share it so someone can send you a friend request.",
-      "rotate": "Generate a new code",
-      "rotated": "New code ready. The old one no longer works."
+    "tag": {
+      "title": "My tag",
+      "hint": "Your tag is public: anyone who knows it can send you a friend request.",
+      "label": "Tag",
+      "saved": "Tag saved. The old one no longer works."
     }
   },
   "subjects": {
@@ -165,14 +169,14 @@
       "outgoing": "Sent",
       "blocked": "Blocked"
     },
-    "myCode": "My code",
-    "myCodeHint": "Share it so someone can send you a friend request.",
-    "addByCode": "Add by code",
-    "addByCodeHint": "Enter the code someone gave you.",
+    "myTag": "My tag",
+    "myTagHint": "Share it so someone can send you a friend request.",
+    "addByTag": "Add by tag",
+    "addByTagHint": "Type the tag of the person you want to add.",
     "add": "Send request",
     "requestSent": "Request sent.",
     "nowFriends": "You and {{name}} are now friends.",
-    "addNeedsCode": "Adding someone new needs their friend code.",
+    "emptyHint": "Add someone by tag, or straight from a discussion.",
     "since": "Friends since",
     "empty": {
       "friends": "No friends yet.",
@@ -181,6 +185,7 @@
       "blocked": "You haven't blocked anyone."
     },
     "actions": {
+      "add": "Add friend",
       "accept": "Accept",
       "decline": "Decline",
       "cancel": "Cancel request",
@@ -215,7 +220,12 @@
     "notFriends": "You aren't friends.",
     "requestNotFound": "That request no longer exists.",
     "cannotBlockSelf": "You can't block yourself.",
-    "friendCodeNotFound": "No account matches that code.",
+    "tagNotFound": "No account has that tag.",
+    "tagTaken": "That tag is already taken.",
+    "tagInvalid": "Use lowercase letters, digits, \".\" and \"_\" only.",
+    "tagTooShort": "Tags are at least 3 characters.",
+    "tagTooLong": "Tags are at most 32 characters.",
+    "passwordsDontMatch": "The passwords don't match.",
     "cannotFriendSelf": "You can't send yourself a friend request.",
     "alreadyFriends": "You're already friends.",
     "requestAlreadySent": "You've already sent a request.",

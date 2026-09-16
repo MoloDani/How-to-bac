@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EmptyState } from '#/components/empty-state'
+import { TagInput } from '#/components/tag-input'
 import { RelativeTime } from '#/components/relative-time'
 import { Button } from '#/components/ui/button'
 import {
@@ -27,7 +28,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '#/components/ui/dialog'
-import { Input } from '#/components/ui/input'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { errorKey } from '#/lib/api/errors'
@@ -62,10 +62,10 @@ function FriendsPage() {
         <h1 className="text-3xl font-bold tracking-tight">
           {t('friends.title')}
         </h1>
-        <AddByCodeDialog />
+        <AddByTagDialog />
       </div>
 
-      <MyCodeCard friendCode={user.friendCode} />
+      <MyTagCard tag={user.tag} />
 
       <Tabs defaultValue="friends">
         <TabsList>
@@ -96,12 +96,12 @@ function FriendsPage() {
   )
 }
 
-function MyCodeCard({ friendCode }: { friendCode: string }) {
+function MyTagCard({ tag }: { tag: string }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   const copy = async () => {
-    await navigator.clipboard.writeText(friendCode)
+    await navigator.clipboard.writeText(`@${tag}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -109,12 +109,12 @@ function MyCodeCard({ friendCode }: { friendCode: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('friends.myCode')}</CardTitle>
-        <CardDescription>{t('friends.myCodeHint')}</CardDescription>
+        <CardTitle>{t('friends.myTag')}</CardTitle>
+        <CardDescription>{t('friends.myTagHint')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-3">
-        <code className="bg-muted rounded-lg px-4 py-2 font-mono text-xl tracking-[0.3em]">
-          {friendCode}
+        <code className="bg-muted rounded-lg px-4 py-2 font-mono text-xl">
+          @{tag}
         </code>
         <Button variant="outline" size="sm" onClick={() => void copy()}>
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
@@ -125,17 +125,17 @@ function MyCodeCard({ friendCode }: { friendCode: string }) {
   )
 }
 
-function AddByCodeDialog() {
+function AddByTagDialog() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [code, setCode] = useState('')
+  const [tag, setTag] = useState('')
 
   const add = useMutation({
-    mutationFn: () => sendFriendRequest(code),
+    mutationFn: () => sendFriendRequest(tag),
     onSuccess: async (relationship) => {
       setOpen(false)
-      setCode('')
+      setTag('')
       await queryClient.invalidateQueries({ queryKey: friendKeys.all })
       toast.success(
         relationship.state === 'FRIENDS'
@@ -151,23 +151,23 @@ function AddByCodeDialog() {
       <DialogTrigger asChild>
         <Button size="sm">
           <UserPlus className="size-4" />
-          {t('friends.addByCode')}
+          {t('friends.addByTag')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('friends.addByCode')}</DialogTitle>
-          <DialogDescription>{t('friends.addByCodeHint')}</DialogDescription>
+          <DialogTitle>{t('friends.addByTag')}</DialogTitle>
+          <DialogDescription>{t('friends.addByTagHint')}</DialogDescription>
         </DialogHeader>
-        <Input
-          value={code}
-          placeholder="K7MQ-2XPA"
-          className="font-mono tracking-widest uppercase"
-          onChange={(event) => setCode(event.target.value)}
+        <TagInput
+          value={tag}
+          placeholder="andrei_m"
+          autoComplete="off"
+          onChange={setTag}
         />
         <DialogFooter>
           <Button
-            disabled={!code.trim() || add.isPending}
+            disabled={!tag.trim() || add.isPending}
             onClick={() => add.mutate()}
           >
             {t('friends.add')}
@@ -192,7 +192,10 @@ function UserRow({
     <li className="border-border/60 flex flex-wrap items-center gap-3 border-b py-3 last:border-0">
       <div className="min-w-0">
         <p className="truncate font-medium">{user.userName}</p>
-        {meta ? <p className="text-muted-foreground text-xs">{meta}</p> : null}
+        <p className="text-muted-foreground truncate font-mono text-xs">
+          @{user.tag}
+          {meta ? <span className="font-sans"> · {meta}</span> : null}
+        </p>
       </div>
       <div className="ml-auto flex gap-2">{children}</div>
     </li>
@@ -222,7 +225,7 @@ function FriendsList() {
     return (
       <EmptyState
         title={t('friends.empty.friends')}
-        description={t('friends.addNeedsCode')}
+        description={t('friends.emptyHint')}
       />
     )
   }

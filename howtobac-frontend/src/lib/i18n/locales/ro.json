@@ -28,6 +28,7 @@
   "auth": {
     "email": "Email",
     "password": "Parolă",
+    "confirmPassword": "Confirmă parola",
     "login": {
       "title": "Bine ai revenit",
       "subtitle": "Autentifică-te ca să îți vezi materiile.",
@@ -43,6 +44,9 @@
       "title": "Creează-ți contul",
       "subtitle": "Ai nevoie doar de un email și o parolă.",
       "userName": "Nume",
+      "tag": "Tag",
+      "tagHint": "Așa te găsesc prietenii: litere mici, cifre, \".\" și \"_\".",
+      "tagFree": "Tagul este liber.",
       "submit": "Creează cont",
       "haveAccount": "Ai deja cont?",
       "checkInbox": "Verifică-ți emailul",
@@ -88,11 +92,11 @@
       "saved": "Materiile au fost salvate.",
       "limitReached": "Poți alege cel mult {{count}} materii."
     },
-    "friendCode": {
-      "title": "Codul meu de prieten",
-      "hint": "Trimite-l cuiva ca să îți poată da cerere de prietenie.",
-      "rotate": "Generează cod nou",
-      "rotated": "Ai un cod nou. Cel vechi nu mai funcționează."
+    "tag": {
+      "title": "Tagul meu",
+      "hint": "Tagul tău este public: cine îl știe îți poate da cerere de prietenie.",
+      "label": "Tag",
+      "saved": "Tag salvat. Cel vechi nu mai funcționează."
     }
   },
   "subjects": {
@@ -166,14 +170,14 @@
       "outgoing": "Cereri trimise",
       "blocked": "Blocați"
     },
-    "myCode": "Codul meu",
-    "myCodeHint": "Trimite-l cuiva ca să îți poată da cerere de prietenie.",
-    "addByCode": "Adaugă după cod",
-    "addByCodeHint": "Introdu codul primit de la cineva.",
+    "myTag": "Tagul meu",
+    "myTagHint": "Trimite-l cuiva ca să îți poată da cerere de prietenie.",
+    "addByTag": "Adaugă după tag",
+    "addByTagHint": "Scrie tagul persoanei pe care vrei să o adaugi.",
     "add": "Trimite cererea",
     "requestSent": "Cererea a fost trimisă.",
     "nowFriends": "Acum ești prieten cu {{name}}.",
-    "addNeedsCode": "Ca să adaugi pe cineva ai nevoie de codul lui.",
+    "emptyHint": "Adaugă pe cineva după tag, sau direct dintr-o discuție.",
     "since": "Prieteni de",
     "empty": {
       "friends": "Nu ai prieteni încă.",
@@ -182,6 +186,7 @@
       "blocked": "Nu ai blocat pe nimeni."
     },
     "actions": {
+      "add": "Adaugă prieten",
       "accept": "Acceptă",
       "decline": "Refuză",
       "cancel": "Anulează cererea",
@@ -216,7 +221,12 @@
     "notFriends": "Nu sunteți prieteni.",
     "requestNotFound": "Cererea nu mai există.",
     "cannotBlockSelf": "Nu te poți bloca pe tine.",
-    "friendCodeNotFound": "Codul nu corespunde niciunui cont.",
+    "tagNotFound": "Niciun cont nu are acest tag.",
+    "tagTaken": "Tagul este deja luat.",
+    "tagInvalid": "Folosește doar litere mici, cifre, \".\" și \"_\".",
+    "tagTooShort": "Tagul are minim 3 caractere.",
+    "tagTooLong": "Tagul are maxim 32 de caractere.",
+    "passwordsDontMatch": "Parolele nu coincid.",
     "cannotFriendSelf": "Nu îți poți da ție cerere de prietenie.",
     "alreadyFriends": "Sunteți deja prieteni.",
     "requestAlreadySent": "Ai trimis deja o cerere.",

@@ -45,6 +45,11 @@ export function MessageItem({
     <article className="group border-border/60 border-b py-4 last:border-0">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
         <AuthorMenu author={message.author} />
+        {message.author ? (
+          <span className="text-muted-foreground font-mono text-xs">
+            @{message.author.tag}
+          </span>
+        ) : null}
         <span className="text-muted-foreground">
           <RelativeTime value={message.createdAt} />
         </span>

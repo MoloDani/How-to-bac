@@ -23,33 +23,34 @@ describe('Friends (e2e)', () => {
     await t.close();
   });
 
-  it('sends a request by friend code, lists it, and accepts it', async () => {
+  it('sends a request by tag, lists it, and accepts it', async () => {
     const alice = await f.person('alice');
     const bob = await f.person('bob');
 
-    // /me shows the code, and rotating replaces it.
+    // /me shows the tag, and changing it takes effect at once.
     const me = await http()
       .get('/v1/me')
       .set(bearer(alice.accessToken))
       .expect(200);
-    expect(me.body.friendCode).toBe(alice.friendCode);
-    const rotated = await http()
-      .post('/v1/me/friend-code')
+    expect(me.body.tag).toBe(alice.tag);
+    const renamed = await http()
+      .patch('/v1/me')
       .set(bearer(alice.accessToken))
+      .send({ tag: `${alice.tag}_x` })
       .expect(200);
-    const code: string = rotated.body.friendCode;
-    expect(code).toMatch(/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$/);
-    expect(code).not.toBe(alice.friendCode);
+    const tag: string = renamed.body.tag;
+    expect(tag).toBe(`${alice.tag}_x`);
 
-    const oldCode = await f.sendRequest(bob, alice.friendCode).expect(404);
-    expect(oldCode.body.message).toBe('friend_code_not_found');
+    const oldTag = await f.sendRequest(bob, alice.tag).expect(404);
+    expect(oldTag.body.message).toBe('tag_not_found');
 
     // Typed the way people share it.
-    const typed = `${code.slice(0, 4)}-${code.slice(4)}`.toLowerCase();
-    const sent = await f.sendRequest(bob, typed).expect(201);
+    const sent = await f
+      .sendRequest(bob, ` @${tag.toUpperCase()} `)
+      .expect(201);
     expect(sent.body).toEqual({
       state: 'REQUEST_SENT',
-      user: { id: alice.userId, userName: 'Test', role: 'USER' },
+      user: { id: alice.userId, userName: 'Test', tag, role: 'USER' },
     });
 
     const incoming = await http()
@@ -63,9 +64,9 @@ describe('Friends (e2e)', () => {
       .expect(200);
     expect(f.userIds(outgoing)).toEqual([alice.userId]);
 
-    const again = await f.sendRequest(bob, code).expect(409);
+    const again = await f.sendRequest(bob, tag).expect(409);
     expect(again.body.message).toBe('request_already_sent');
-    const self = await f.sendRequest(bob, bob.friendCode).expect(400);
+    const self = await f.sendRequest(bob, bob.tag).expect(400);
     expect(self.body.message).toBe('cannot_friend_self');
 
     // Only the addressee can accept.
@@ -79,7 +80,7 @@ describe('Friends (e2e)', () => {
       .expect(200);
     expect(accepted.body).toEqual({
       state: 'FRIENDS',
-      user: { id: bob.userId, userName: 'Test', role: 'USER' },
+      user: { id: bob.userId, userName: 'Test', tag: bob.tag, role: 'USER' },
     });
     await http()
       .post(`/v1/friends/requests/${bob.userId}/accept`)
@@ -98,7 +99,7 @@ describe('Friends (e2e)', () => {
       expect(f.userIds(friends)).toEqual([other.userId]);
     }
 
-    const alreadyFriends = await f.sendRequest(bob, code).expect(409);
+    const alreadyFriends = await f.sendRequest(bob, tag).expect(409);
     expect(alreadyFriends.body.message).toBe('already_friends');
   });
 
@@ -107,7 +108,7 @@ describe('Friends (e2e)', () => {
     const dan = await f.person('dan');
     await f.seedFriendship(carol, dan);
 
-    const back = await f.sendRequest(dan, carol.friendCode).expect(200);
+    const back = await f.sendRequest(dan, carol.tag).expect(200);
     expect(back.body.state).toBe('FRIENDS');
     const rows = await f.pairRows(carol, dan);
     expect(rows).toHaveLength(1);
@@ -116,8 +117,8 @@ describe('Friends (e2e)', () => {
     const erin = await f.person('erin');
     const frank = await f.person('frank');
     const results = await Promise.all([
-      f.sendRequest(erin, frank.friendCode),
-      f.sendRequest(frank, erin.friendCode),
+      f.sendRequest(erin, frank.tag),
+      f.sendRequest(frank, erin.tag),
     ]);
     expect(results.map((r) => r.status).sort()).toEqual([200, 201]);
 

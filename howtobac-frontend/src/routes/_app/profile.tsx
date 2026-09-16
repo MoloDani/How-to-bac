@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Check, Copy, RefreshCw } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -25,7 +25,8 @@ import { errorKey } from '#/lib/api/errors'
 import type { PublicUser } from '#/lib/api/types'
 import { session } from '#/lib/auth/session'
 import { useSession } from '#/lib/auth/use-session'
-import { userNameField } from '#/lib/forms'
+import { TagInput } from '#/components/tag-input'
+import { tagField, userNameField } from '#/lib/forms'
 import { MAX_SUBJECTS, SUBJECTS } from '#/lib/subjects'
 import type { Subject } from '#/lib/subjects'
 import { FieldError } from '../login'
@@ -36,6 +37,9 @@ export const Route = createFileRoute('/_app/profile')({
 
 const nameSchema = z.object({ userName: userNameField })
 type NameValues = z.infer<typeof nameSchema>
+
+const tagSchema = z.object({ tag: tagField })
+type TagValues = z.infer<typeof tagSchema>
 
 function ProfilePage() {
   const { t } = useTranslation()
@@ -50,7 +54,7 @@ function ProfilePage() {
       </h1>
       <AccountCard user={user} />
       <SubjectsCard user={user} />
-      <FriendCodeCard user={user} />
+      <TagCard user={user} />
     </div>
   )
 }
@@ -184,21 +188,26 @@ function SubjectsCard({ user }: { user: PublicUser }) {
   )
 }
 
-function FriendCodeCard({ user }: { user: PublicUser }) {
+function TagCard({ user }: { user: PublicUser }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
+  const form = useForm<TagValues>({
+    resolver: zodResolver(tagSchema),
+    defaultValues: { tag: user.tag },
+  })
 
-  const rotate = useMutation({
-    mutationFn: () => api.post<{ friendCode: string }>('/me/friend-code'),
-    onSuccess: ({ friendCode }) => {
-      session.set({ ...user, friendCode })
-      toast.success(t('profile.friendCode.rotated'))
+  const rename = useMutation({
+    mutationFn: (values: TagValues) => api.patch<PublicUser>('/me', values),
+    onSuccess: (updated) => {
+      session.set(updated)
+      form.reset({ tag: updated.tag })
+      toast.success(t('profile.tag.saved'))
     },
     onError: (error) => toast.error(t(errorKey(error))),
   })
 
   const copy = async () => {
-    await navigator.clipboard.writeText(user.friendCode)
+    await navigator.clipboard.writeText(`@${user.tag}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -206,36 +215,54 @@ function FriendCodeCard({ user }: { user: PublicUser }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('profile.friendCode.title')}</CardTitle>
-        <CardDescription>{t('profile.friendCode.hint')}</CardDescription>
+        <CardTitle>{t('profile.tag.title')}</CardTitle>
+        <CardDescription>{t('profile.tag.hint')}</CardDescription>
       </CardHeader>
 
-      <CardContent className="flex flex-wrap items-center gap-3">
-        <code className="bg-muted rounded-lg px-4 py-2 font-mono text-xl tracking-[0.3em]">
-          {user.friendCode}
-        </code>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => void copy()}
-        >
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-          {copied ? t('common.copied') : t('common.copy')}
-        </Button>
-      </CardContent>
+      <form onSubmit={form.handleSubmit((values) => rename.mutate(values))}>
+        <CardContent className="space-y-2">
+          <Label htmlFor="tag">{t('profile.tag.label')}</Label>
+          <div className="flex flex-wrap items-center gap-3">
+            <Controller
+              control={form.control}
+              name="tag"
+              render={({ field }) => (
+                <TagInput
+                  id="tag"
+                  className="max-w-xs"
+                  autoComplete="username"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void copy()}
+            >
+              {copied ? (
+                <Check className="size-4" />
+              ) : (
+                <Copy className="size-4" />
+              )}
+              {copied ? t('common.copied') : t('common.copy')}
+            </Button>
+          </div>
+          <FieldError message={form.formState.errors.tag?.message} />
+        </CardContent>
 
-      <CardFooter className="mt-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={rotate.isPending}
-          onClick={() => rotate.mutate()}
-        >
-          <RefreshCw className="size-4" />
-          {t('profile.friendCode.rotate')}
-        </Button>
-      </CardFooter>
+        <CardFooter className="mt-6">
+          <Button
+            type="submit"
+            disabled={rename.isPending || !form.formState.isDirty}
+          >
+            {rename.isPending ? t('common.saving') : t('common.save')}
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   )
 }

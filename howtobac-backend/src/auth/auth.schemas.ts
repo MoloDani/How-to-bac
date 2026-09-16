@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { userSubjectListSchema } from '../common/subjects.js';
+import { tagSchema } from '../users/user-tag.js';
 
 export const emailSchema = z
   .string()
@@ -17,9 +18,14 @@ export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   userName: userNameSchema,
+  tag: tagSchema,
   subjects: userSubjectListSchema.default([]),
 });
 export type RegisterDto = z.output<typeof registerSchema>;
+
+/** Query for the sign-up form's live "is this tag free?" check. */
+export const tagAvailableQuerySchema = z.object({ tag: z.string().max(64) });
+export type TagAvailableQuery = z.output<typeof tagAvailableQuerySchema>;
 
 export const loginSchema = z.object({
   email: emailSchema,

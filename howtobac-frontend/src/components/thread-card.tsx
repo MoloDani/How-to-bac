@@ -31,7 +31,15 @@ export function ThreadCard({ thread }: { thread: Thread }) {
       </div>
 
       <p className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <span>{thread.author?.userName ?? t('threads.deletedAccount')}</span>
+        <span>
+          {thread.author?.userName ?? t('threads.deletedAccount')}
+          {thread.author ? (
+            <span className="text-muted-foreground font-mono">
+              {' '}
+              @{thread.author.tag}
+            </span>
+          ) : null}
+        </span>
         <span className="inline-flex items-center gap-1">
           <MessageSquare className="size-3" />
           {t('threads.messageCount', { count: thread.messageCount })}

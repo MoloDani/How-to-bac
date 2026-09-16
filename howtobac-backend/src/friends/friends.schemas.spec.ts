@@ -5,13 +5,11 @@ import {
 } from './friends.schemas.js';
 
 describe('friends schemas', () => {
-  it('normalizes the friend code in a request', () => {
-    expect(sendRequestSchema.parse({ friendCode: 'k7mq-2xpa' })).toEqual({
-      friendCode: 'K7MQ2XPA',
+  it('normalizes the tag in a request', () => {
+    expect(sendRequestSchema.parse({ tag: ' @Andrei_M ' })).toEqual({
+      tag: 'andrei_m',
     });
-    expect(sendRequestSchema.safeParse({ friendCode: 'nope' }).success).toBe(
-      false,
-    );
+    expect(sendRequestSchema.safeParse({ tag: 'no' }).success).toBe(false);
   });
 
   it('lowercases user ids', () => {

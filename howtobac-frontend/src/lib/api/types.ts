@@ -7,9 +7,9 @@ export interface PublicUser {
   id: string
   email: string
   userName: string
+  tag: string
   role: Role
   subjects: Array<Subject>
-  friendCode: string
   emailVerified: boolean
   createdAt: string
 }
@@ -30,6 +30,8 @@ export interface Page<T> {
 export interface UserSummary {
   id: string
   userName: string
+  /** Public handle: shown next to the name and enough to add them as a friend. */
+  tag: string
   role: Role
 }
 

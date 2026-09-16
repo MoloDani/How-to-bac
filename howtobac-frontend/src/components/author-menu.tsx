@@ -19,14 +19,15 @@ import {
   friendKeys,
   relationshipQuery,
   removeRequest,
+  sendFriendRequest,
   unblockUser,
   unfriend,
 } from '#/lib/queries/friends'
 
 /**
  * An author's name, with what you can do about them. The relationship is only
- * fetched once the menu opens. Sending a new request isn't here: the API only
- * accepts friend codes.
+ * fetched once the menu opens; their tag comes with the message, so adding
+ * them is one click from here.
  */
 export function AuthorMenu({ author }: { author: UserSummary | null }) {
   const { t } = useTranslation()
@@ -71,6 +72,9 @@ export function AuthorMenu({ author }: { author: UserSummary | null }) {
       <DropdownMenuContent align="start" className="w-60">
         <DropdownMenuLabel className="truncate">
           {author.userName}
+          <span className="text-muted-foreground block font-mono text-xs font-normal">
+            @{author.tag}
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
@@ -81,9 +85,9 @@ export function AuthorMenu({ author }: { author: UserSummary | null }) {
         ) : null}
 
         {state === 'NONE' ? (
-          <DropdownMenuLabel className="text-muted-foreground text-xs font-normal whitespace-normal">
-            {t('friends.addNeedsCode')}
-          </DropdownMenuLabel>
+          <DropdownMenuItem onSelect={run(() => sendFriendRequest(author.tag))}>
+            {t('friends.actions.add')}
+          </DropdownMenuItem>
         ) : null}
 
         {state === 'REQUEST_RECEIVED' ? (

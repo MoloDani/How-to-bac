@@ -5,8 +5,18 @@ import {
   userSubjectListSchema,
 } from '../common/subjects.js';
 import { Role } from '../generated/prisma/enums.js';
+import { tagSchema } from './user-tag.js';
 
-export const updateMeSchema = z.object({ userName: userNameSchema });
+/** Both fields are optional, but sending neither is a mistake worth reporting. */
+export const updateMeSchema = z
+  .object({
+    userName: userNameSchema.optional(),
+    tag: tagSchema.optional(),
+  })
+  .refine(
+    (dto) => dto.userName !== undefined || dto.tag !== undefined,
+    'nothing_to_update',
+  );
 export type UpdateMeDto = z.output<typeof updateMeSchema>;
 
 export const setMySubjectsSchema = z.object({

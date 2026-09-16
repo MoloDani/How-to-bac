@@ -1,19 +1,23 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthTokenPurpose } from '../generated/prisma/enums.js';
 import { MailService } from '../mail/mail.service.js';
-import { isUniqueViolation } from '../prisma/prisma-errors.js';
+import {
+  isUniqueViolation,
+  isUniqueViolationOn,
+} from '../prisma/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { generateFriendCode } from '../users/friend-code.js';
 import {
   publicUserSelect,
   toPublicUser,
   type PublicUser,
 } from '../users/public-user.js';
+import { tagSchema } from '../users/user-tag.js';
 import type {
   LoginDto,
   RegisterDto,
@@ -59,7 +63,7 @@ export class AuthService {
           email: dto.email,
           passwordHash,
           userName: dto.userName,
-          friendCode: generateFriendCode(),
+          tag: dto.tag,
           subjects: {
             create: dto.subjects.map((subject) => ({ subject })),
           },
@@ -68,9 +72,25 @@ export class AuthService {
       });
       await this.sendVerification(user.id, dto.email);
     } catch (err) {
-      // A concurrent sign-up with the same email won the race.
+      // Tags are public, so naming the clash gives nothing away — unlike the
+      // email, where a concurrent sign-up stays as silent as an existing one.
+      if (isUniqueViolationOn(err, 'tag')) {
+        throw new ConflictException('tag_taken');
+      }
       if (!isUniqueViolation(err)) throw err;
     }
+  }
+
+  /** Powers the sign-up form's live check; invalid tags are simply unavailable. */
+  async isTagAvailable(tag: string): Promise<boolean> {
+    const parsed = tagSchema.safeParse(tag);
+    if (!parsed.success) return false;
+
+    const taken = await this.prisma.user.findUnique({
+      where: { tag: parsed.data },
+      select: { id: true },
+    });
+    return taken === null;
   }
 
   async verifyEmail(token: string): Promise<void> {
