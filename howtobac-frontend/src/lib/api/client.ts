@@ -100,5 +100,6 @@ export const api = {
   post: <T>(path: string, body?: Body) => request<T>('POST', path, body),
   patch: <T>(path: string, body?: Body) => request<T>('PATCH', path, body),
   put: <T>(path: string, body?: Body) => request<T>('PUT', path, body),
-  remove: <T>(path: string) => request<T>('DELETE', path),
+  // A body is unusual on DELETE, but closing an account asks for the password.
+  remove: <T>(path: string, body?: Body) => request<T>('DELETE', path, body),
 }

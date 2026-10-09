@@ -21,6 +21,8 @@ export interface UserSummary {
 export interface PublicUser {
   id: string;
   email: string;
+  /** The address waiting to be confirmed, when a change is in flight. */
+  pendingEmail: string | null;
   userName: string;
   tag: string;
   role: Role;
@@ -32,6 +34,7 @@ export interface PublicUser {
 export const publicUserSelect = {
   id: true,
   email: true,
+  pendingEmail: true,
   userName: true,
   tag: true,
   role: true,
@@ -45,6 +48,7 @@ type PublicUserRow = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
 export const toPublicUser = (row: PublicUserRow): PublicUser => ({
   id: row.id,
   email: row.email,
+  pendingEmail: row.pendingEmail,
   userName: row.userName,
   tag: row.tag,
   role: row.role,

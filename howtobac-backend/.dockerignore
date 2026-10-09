@@ -1,0 +1,11 @@
+node_modules
+dist
+# Regenerated during the build by prisma generate.
+src/generated
+.env
+.env.*
+test
+*.tsbuildinfo
+deploy
+Dockerfile
+.dockerignore

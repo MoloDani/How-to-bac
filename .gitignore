@@ -1,0 +1,6 @@
+# macOS
+.DS_Store
+
+# Each app keeps its own ignores too; these cover the repo root.
+node_modules/
+dist/

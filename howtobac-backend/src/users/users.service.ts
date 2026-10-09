@@ -73,8 +73,12 @@ export class UsersService {
             const admins = await tx.user.count({ where: { role: Role.ADMIN } });
             if (admins <= 1) throw new ConflictException('last_admin');
           }
-          await tx.user.update({ where: { id: userId }, data: { role } });
-          // Force a fresh login under the new role.
+          await tx.user.update({
+            where: { id: userId },
+            // sessionsValidFrom retires the access tokens; revoking the
+            // refresh tokens below forces a fresh login under the new role.
+            data: { role, sessionsValidFrom: new Date() },
+          });
           await tx.refreshToken.updateMany({
             where: { userId, revokedAt: null },
             data: { revokedAt: new Date() },

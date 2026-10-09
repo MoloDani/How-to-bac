@@ -1,0 +1,11 @@
+node_modules
+dist
+# .env.production is kept on purpose: it holds the default VITE_API_URL, so a
+# build with no build variable set still points somewhere real.
+.env
+.env.local
+.env.*.local
+.tanstack
+.vscode
+Dockerfile
+.dockerignore

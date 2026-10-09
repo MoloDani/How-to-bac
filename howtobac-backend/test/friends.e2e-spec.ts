@@ -3,6 +3,8 @@ import {
   bearer,
   createTestApp,
   friendTools,
+  SHAPES,
+  shapeOf,
   type Person,
   type TestApp,
 } from './helpers.js';
@@ -58,6 +60,9 @@ describe('Friends (e2e)', () => {
       .set(bearer(alice.accessToken))
       .expect(200);
     expect(f.userIds(incoming)).toEqual([bob.userId]);
+    // Pins RequestView and the page envelope.
+    expect(shapeOf(incoming.body)).toEqual([...SHAPES.page]);
+    expect(shapeOf(incoming.body.items[0])).toEqual([...SHAPES.request]);
     const outgoing = await http()
       .get('/v1/friends/requests/outgoing')
       .set(bearer(bob.accessToken))
@@ -82,6 +87,8 @@ describe('Friends (e2e)', () => {
       state: 'FRIENDS',
       user: { id: bob.userId, userName: 'Test', tag: bob.tag, role: 'USER' },
     });
+    // Pins Relationship.
+    expect(shapeOf(accepted.body)).toEqual([...SHAPES.relationship]);
     await http()
       .post(`/v1/friends/requests/${bob.userId}/accept`)
       .set(bearer(alice.accessToken))
@@ -97,6 +104,8 @@ describe('Friends (e2e)', () => {
         .set(bearer(viewer.accessToken))
         .expect(200);
       expect(f.userIds(friends)).toEqual([other.userId]);
+      // Pins FriendView.
+      expect(shapeOf(friends.body.items[0])).toEqual([...SHAPES.friend]);
     }
 
     const alreadyFriends = await f.sendRequest(bob, tag).expect(409);

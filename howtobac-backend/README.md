@@ -1,114 +1,69 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# How to Bac API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS 12 on ESM, Prisma 7 against Postgres, Zod for every request body. Served
+under the `/v1` prefix. See the [repository README](../README.md) for the project
+as a whole and how it's deployed.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Setup
 
 ```bash
-$ pnpm install
+cp .env.example .env     # fill DATABASE_URL and JWT_ACCESS_SECRET at least
+pnpm install             # postinstall generates the Prisma client
+pnpm db:deploy           # apply migrations
+pnpm db:seed             # optional: create or promote the first admin
 ```
 
-## Compile and run the project
+`pnpm start:dev` runs it on `PORT` (3000 by default) with Swagger UI at
+[`/docs`](http://localhost:3000/docs); `pnpm start:prod` runs the build.
+The app validates its environment on boot and refuses to start on bad config
+([src/config/env.ts](src/config/env.ts)).
 
-```bash
-# development
-$ pnpm run start
+## Scripts
 
-# watch mode
-$ pnpm run start:dev
+| Command            | What it does                                                             |
+| ------------------ | ------------------------------------------------------------------------ |
+| `pnpm test`        | unit tests (Vitest)                                                      |
+| `pnpm test:e2e`    | end-to-end tests — **wipes `TEST_DATABASE_URL`**                         |
+| `pnpm lint`        | oxlint                                                                   |
+| `pnpm build`       | compile to `dist/`                                                       |
+| `pnpm db:deploy`   | apply pending migrations (use this on the server)                        |
+| `pnpm db:migrate`  | create a new migration from schema changes (needs `SHADOW_DATABASE_URL`) |
+| `pnpm db:generate` | regenerate the Prisma client after a schema change                       |
 
-# production mode
-$ pnpm run start:prod
+## Layout
+
+```
+src/
+  auth/        sign-up, sign-in, tokens, guards and the access policy
+  users/       /me, admin user management, user tags
+  threads/     per-subject threads and their messages
+  friends/     friend requests, friendships and blocks
+  mail/        Resend, with templates (logs links when RESEND_API_KEY is empty)
+  maintenance/ the nightly job that prunes expired tokens
+  common/      pagination, subject schemas, rate limiting
+  config/      environment validation
+prisma/        schema, migrations, seed
+test/          end-to-end specs
 ```
 
-## Run tests
+Three global guards run in order — rate limit, authenticate, authorize — so a
+route is protected unless it says `@Public()`. `@Roles()` and `@SubjectAccess()`
+narrow it further.
 
-```bash
-# unit tests
-$ pnpm run test
+## Things to know
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Rate limits** are keyed on the account when a request carries an access
+  token, and on the IP otherwise ([src/common/throttle.ts](src/common/throttle.ts)).
+  Set `TRUST_PROXY` to the number of proxies in front of the API, or the IP
+  fallback sees the proxy's address instead of the client's.
+- **`sessionsValidFrom`** on the user row retires every access token issued
+  before it. A password reset or role change moves it forward, so those take
+  effect immediately rather than after the 15-minute token expiry.
+- **Two constraints exist only in migration SQL** (`friendships_pair_key` and
+  the `friendships_not_self` check) because the Prisma schema can't express
+  them. Prisma doesn't know about them, so check what `pnpm db:migrate`
+  generates and drop any statement that removes them.
+- **Telemetry** is off unless `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` are
+  both set ([NestJS Observe](https://observe.nestjs.com)).
+- **`GET /v1/health`** reports whether the API can reach Postgres; `GET /v1`
+  only proves the process is listening.

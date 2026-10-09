@@ -7,12 +7,17 @@ const KEYS: Record<string, string> = {
   invalid_or_expired_token: 'errors.invalidToken',
   invalid_refresh_token: 'errors.sessionExpired',
   token_expired: 'errors.sessionExpired',
+  // The account's sessions were ended elsewhere (password reset, role change).
+  session_revoked: 'errors.sessionExpired',
   invalid_token: 'errors.sessionExpired',
   missing_token: 'errors.sessionExpired',
   validation_failed: 'errors.validation',
   subjects_managed_by_admin: 'errors.subjectsManagedByAdmin',
   insufficient_role: 'errors.insufficientRole',
   user_not_found: 'errors.userNotFound',
+  email_taken: 'errors.emailTaken',
+  email_unchanged: 'errors.emailUnchanged',
+  last_admin: 'errors.lastAdmin',
   // Threads
   thread_not_found: 'errors.threadNotFound',
   message_not_found: 'errors.messageNotFound',

@@ -12,10 +12,13 @@ const DAY_MS = 24 * HOUR_MS;
 const AUTH_TOKEN_TTL_MS: Record<AuthTokenPurpose, number> = {
   [AuthTokenPurpose.EMAIL_VERIFY]: 24 * HOUR_MS,
   [AuthTokenPurpose.PASSWORD_RESET]: HOUR_MS,
+  [AuthTokenPurpose.EMAIL_CHANGE]: 24 * HOUR_MS,
 };
 
 export interface AccessPayload {
   sub: string;
+  /** Seconds since the epoch, set by jsonwebtoken. Checked against sessionsValidFrom. */
+  iat: number;
 }
 
 export interface TokenPair {

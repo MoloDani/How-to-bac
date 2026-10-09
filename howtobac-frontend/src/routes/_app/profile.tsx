@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
-import { Check, Copy } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Check, Copy, TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -20,13 +20,26 @@ import {
 } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
-import { api } from '#/lib/api/client'
+import { api, setAccessToken } from '#/lib/api/client'
 import { errorKey } from '#/lib/api/errors'
 import type { PublicUser } from '#/lib/api/types'
 import { session } from '#/lib/auth/session'
 import { useSession } from '#/lib/auth/use-session'
 import { TagInput } from '#/components/tag-input'
-import { tagField, userNameField } from '#/lib/forms'
+import { ConfirmDialog } from '#/components/confirm-dialog'
+import {
+  currentPasswordField,
+  emailField,
+  normalizeTag,
+  passwordField,
+  tagField,
+  userNameField,
+} from '#/lib/forms'
+import {
+  changePassword,
+  deleteAccount,
+  requestEmailChange,
+} from '#/lib/queries/account'
 import { MAX_SUBJECTS, SUBJECTS } from '#/lib/subjects'
 import type { Subject } from '#/lib/subjects'
 import { FieldError } from '../login'
@@ -40,6 +53,24 @@ type NameValues = z.infer<typeof nameSchema>
 
 const tagSchema = z.object({ tag: tagField })
 type TagValues = z.infer<typeof tagSchema>
+
+const passwordSchema = z
+  .object({
+    currentPassword: currentPasswordField,
+    newPassword: passwordField,
+    confirmPassword: currentPasswordField,
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'errors.passwordsDontMatch',
+  })
+type PasswordValues = z.infer<typeof passwordSchema>
+
+const emailChangeSchema = z.object({
+  newEmail: emailField,
+  currentPassword: currentPasswordField,
+})
+type EmailValues = z.infer<typeof emailChangeSchema>
 
 function ProfilePage() {
   const { t } = useTranslation()
@@ -55,6 +86,9 @@ function ProfilePage() {
       <AccountCard user={user} />
       <SubjectsCard user={user} />
       <TagCard user={user} />
+      <EmailCard user={user} />
+      <PasswordCard />
+      <DangerZoneCard user={user} />
     </div>
   )
 }
@@ -263,6 +297,244 @@ function TagCard({ user }: { user: PublicUser }) {
           </Button>
         </CardFooter>
       </form>
+    </Card>
+  )
+}
+
+function EmailCard({ user }: { user: PublicUser }) {
+  const { t } = useTranslation()
+  const form = useForm<EmailValues>({
+    resolver: zodResolver(emailChangeSchema),
+    defaultValues: { newEmail: '', currentPassword: '' },
+  })
+
+  const request = useMutation({
+    mutationFn: requestEmailChange,
+    onSuccess: () => {
+      form.reset({ newEmail: '', currentPassword: '' })
+      toast.success(t('profile.email.sent'))
+    },
+    onError: (error) => toast.error(t(errorKey(error))),
+  })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('profile.email.title')}</CardTitle>
+        <CardDescription>{t('profile.email.hint')}</CardDescription>
+      </CardHeader>
+
+      <form onSubmit={form.handleSubmit((values) => request.mutate(values))}>
+        <CardContent className="space-y-4">
+          {user.pendingEmail ? (
+            <p className="bg-muted rounded-lg px-3 py-2 text-sm">
+              {t('profile.email.pending', { email: user.pendingEmail })}
+            </p>
+          ) : null}
+
+          <div className="space-y-2">
+            <Label htmlFor="newEmail">{t('profile.email.newLabel')}</Label>
+            <Input
+              id="newEmail"
+              type="email"
+              autoComplete="email"
+              {...form.register('newEmail')}
+            />
+            <FieldError message={form.formState.errors.newEmail?.message} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="emailPassword">
+              {t('profile.currentPassword')}
+            </Label>
+            <Input
+              id="emailPassword"
+              type="password"
+              autoComplete="current-password"
+              {...form.register('currentPassword')}
+            />
+            <FieldError
+              message={form.formState.errors.currentPassword?.message}
+            />
+          </div>
+        </CardContent>
+
+        <CardFooter className="mt-6">
+          <Button type="submit" disabled={request.isPending}>
+            {request.isPending ? t('common.saving') : t('profile.email.submit')}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
+  )
+}
+
+function PasswordCard() {
+  const { t } = useTranslation()
+  const form = useForm<PasswordValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  })
+
+  const change = useMutation({
+    mutationFn: (values: PasswordValues) =>
+      changePassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      }),
+    onSuccess: () => {
+      form.reset({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+      toast.success(t('profile.password.saved'))
+    },
+    onError: (error) => toast.error(t(errorKey(error))),
+  })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('profile.password.title')}</CardTitle>
+        <CardDescription>{t('profile.password.hint')}</CardDescription>
+      </CardHeader>
+
+      <form onSubmit={form.handleSubmit((values) => change.mutate(values))}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">
+              {t('profile.currentPassword')}
+            </Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              autoComplete="current-password"
+              {...form.register('currentPassword')}
+            />
+            <FieldError
+              message={form.formState.errors.currentPassword?.message}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">{t('auth.reset.newPassword')}</Label>
+            <Input
+              id="newPassword"
+              type="password"
+              autoComplete="new-password"
+              {...form.register('newPassword')}
+            />
+            <FieldError message={form.formState.errors.newPassword?.message} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmNewPassword">
+              {t('auth.confirmPassword')}
+            </Label>
+            <Input
+              id="confirmNewPassword"
+              type="password"
+              autoComplete="new-password"
+              {...form.register('confirmPassword')}
+            />
+            <FieldError
+              message={form.formState.errors.confirmPassword?.message}
+            />
+          </div>
+        </CardContent>
+
+        <CardFooter className="mt-6">
+          <Button type="submit" disabled={change.isPending}>
+            {change.isPending ? t('common.saving') : t('common.save')}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
+  )
+}
+
+/** Closing the account: the password, and your own tag typed out. */
+function DangerZoneCard({ user }: { user: PublicUser }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState('')
+  const [typedTag, setTypedTag] = useState('')
+  const [confirming, setConfirming] = useState(false)
+
+  const remove = useMutation({
+    mutationFn: () => deleteAccount(password),
+    onSuccess: () => {
+      setAccessToken(null)
+      session.set(null)
+      toast.success(t('profile.danger.deleted'))
+      void navigate({ to: '/login' })
+    },
+    onError: (error) => toast.error(t(errorKey(error))),
+  })
+
+  const ready = password.length > 0 && normalizeTag(typedTag) === user.tag
+
+  return (
+    <Card className="border-destructive/40">
+      <CardHeader>
+        <CardTitle className="text-destructive flex items-center gap-2">
+          <TriangleAlert className="size-4" />
+          {t('profile.danger.title')}
+        </CardTitle>
+        <CardDescription>{t('profile.danger.hint')}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="deleteTag">
+            {t('profile.danger.typeTag', { tag: `@${user.tag}` })}
+          </Label>
+          <TagInput
+            id="deleteTag"
+            className="max-w-xs"
+            autoComplete="off"
+            value={typedTag}
+            onChange={setTypedTag}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="deletePassword">{t('profile.currentPassword')}</Label>
+          <Input
+            id="deletePassword"
+            type="password"
+            autoComplete="current-password"
+            className="max-w-xs"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+      </CardContent>
+
+      <CardFooter className="mt-6">
+        <Button
+          type="button"
+          variant="destructive"
+          disabled={!ready || remove.isPending}
+          onClick={() => setConfirming(true)}
+        >
+          {t('profile.danger.submit')}
+        </Button>
+      </CardFooter>
+
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={t('profile.danger.confirmTitle')}
+        description={t('profile.danger.confirmBody')}
+        confirmLabel={t('profile.danger.submit')}
+        onConfirm={() => remove.mutate()}
+      />
     </Card>
   )
 }

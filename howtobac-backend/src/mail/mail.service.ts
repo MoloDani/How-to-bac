@@ -4,6 +4,8 @@ import { Resend } from 'resend';
 import type { Env } from '../config/env.js';
 import {
   accountExistsEmail,
+  emailChangeEmail,
+  emailChangeNoticeEmail,
   passwordResetEmail,
   verificationEmail,
   type MailContent,
@@ -31,6 +33,17 @@ export class MailService {
   sendPasswordResetEmail(to: string, token: string) {
     const url = `${this.appBaseUrl}/reset?token=${encodeURIComponent(token)}`;
     return this.send(to, passwordResetEmail(url), url);
+  }
+
+  /** To the address being moved to: the link that completes the change. */
+  sendEmailChangeEmail(to: string, token: string) {
+    const url = `${this.appBaseUrl}/confirm-email?token=${encodeURIComponent(token)}`;
+    return this.send(to, emailChangeEmail(url), url);
+  }
+
+  /** To the address being moved away from, so a hijack doesn't go unnoticed. */
+  sendEmailChangeNotice(to: string, newEmail: string) {
+    return this.send(to, emailChangeNoticeEmail(newEmail));
   }
 
   sendAccountExistsEmail(to: string) {

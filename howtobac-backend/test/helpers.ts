@@ -25,12 +25,70 @@ export const tagFor = (email: string) => suggestTag(email.split('@')[0]);
 
 export const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
 
+/** Every key a response carries, sorted — see SHAPES below. */
+export const shapeOf = (value: object) => Object.keys(value).sort();
+
+/**
+ * The exact shape of each payload the API returns. The web app keeps its own
+ * copy of these in howtobac-frontend/src/lib/api/types.ts, which nothing
+ * enforces — so when a change here makes a test fail, that file needs the
+ * same edit before the two can be deployed together.
+ */
+export const SHAPES = {
+  // PublicUser — the account as its owner sees it.
+  publicUser: [
+    'createdAt',
+    'email',
+    'emailVerified',
+    'id',
+    'pendingEmail',
+    'role',
+    'subjects',
+    'tag',
+    'userName',
+  ],
+  // UserSummary — all anyone else sees. Never an email.
+  userSummary: ['id', 'role', 'tag', 'userName'],
+  threadSummary: [
+    'author',
+    'createdAt',
+    'id',
+    'lastMessageAt',
+    'locked',
+    'messageCount',
+    'pinned',
+    'subject',
+    'title',
+  ],
+  messageView: [
+    'author',
+    'content',
+    'createdAt',
+    'deleted',
+    'edited',
+    'id',
+    'replyToId',
+    'threadId',
+  ],
+  page: ['items', 'nextCursor'],
+  friend: ['since', 'user'],
+  request: ['createdAt', 'user'],
+  relationship: ['state', 'user'],
+} as const;
+
+/**
+ * A JWT's `iat` is in whole seconds, so sessionsValidFrom can only retire
+ * tokens issued in an earlier second. Tests that check that cross the boundary.
+ */
+export const nextSecond = () =>
+  new Promise((resolve) => setTimeout(resolve, 1100 - (Date.now() % 1000)));
+
 export const refreshCookie = (res: Response) =>
   ([res.headers['set-cookie']].flat() as (string | undefined)[])
     .find((c) => c?.startsWith('rt='))
     ?.split(';')[0];
 
-type MailKind = 'verify' | 'reset' | 'exists';
+type MailKind = 'verify' | 'reset' | 'exists' | 'email-change' | 'notice';
 
 /** Captures outgoing emails so tests can follow the links. */
 export class FakeMail {
@@ -44,6 +102,12 @@ export class FakeMail {
   }
   async sendAccountExistsEmail(to: string) {
     this.sent.push({ kind: 'exists', to });
+  }
+  async sendEmailChangeEmail(to: string, token: string) {
+    this.sent.push({ kind: 'email-change', to, token });
+  }
+  async sendEmailChangeNotice(to: string) {
+    this.sent.push({ kind: 'notice', to });
   }
 
   count(kind: MailKind, to: string) {

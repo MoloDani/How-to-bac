@@ -38,20 +38,26 @@ enum Subject {
 enum AuthTokenPurpose {
   EMAIL_VERIFY
   PASSWORD_RESET
+  EMAIL_CHANGE
 }
 
 model User {
-  id              String    @id @default(uuid(7)) @db.Uuid
+  id                String    @id @default(uuid(7)) @db.Uuid
   /// Always stored trimmed and lowercased.
-  email           String    @unique @db.VarChar(255)
-  passwordHash    String    @map("password_hash")
-  userName        String    @map("user_name") @db.VarChar(64)
-  role            Role      @default(USER)
+  email             String    @unique @db.VarChar(255)
+  passwordHash      String    @map("password_hash")
+  userName          String    @map("user_name") @db.VarChar(64)
+  role              Role      @default(USER)
   /// Public handle others use to find and add you. Always lowercase (see src/users/user-tag.ts).
-  tag             String    @unique @db.VarChar(32)
-  emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  tag               String    @unique @db.VarChar(32)
+  /// Set while an email change is waiting to be confirmed from the new address.
+  pendingEmail      String?   @map("pending_email") @db.VarChar(255)
+  emailVerifiedAt   DateTime? @map("email_verified_at")
+  /// Access tokens issued before this moment are refused: one switch that ends
+  /// every session, used on password reset and role change.
+  sessionsValidFrom DateTime  @default(now()) @map("sessions_valid_from")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   subjects           UserSubject[]  @relation("SubjectOwner")
   grantedSubjects    UserSubject[]  @relation("SubjectGrantor")

@@ -48,9 +48,17 @@ export class JwtAuthGuard implements CanActivate {
     // Loaded on every request so role and subject changes apply immediately.
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: publicUserSelect,
+      select: { ...publicUserSelect, sessionsValidFrom: true },
     });
     if (!user) throw new UnauthorizedException('invalid_token');
+
+    // A password reset or role change moves sessionsValidFrom forward, which
+    // retires every token issued before it — `iat` is in whole seconds, so
+    // compare at that resolution.
+    const issuedAt = payload.iat * 1000;
+    if (issuedAt < Math.floor(user.sessionsValidFrom.getTime() / 1000) * 1000) {
+      throw new UnauthorizedException('session_revoked');
+    }
 
     req.user = toPublicUser(user);
     return true;

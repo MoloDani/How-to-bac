@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { userNameSchema } from '../auth/auth.schemas.js';
+import {
+  emailSchema,
+  passwordSchema,
+  userNameSchema,
+} from '../auth/auth.schemas.js';
 import {
   subjectListSchema,
   userSubjectListSchema,
@@ -23,6 +27,26 @@ export const setMySubjectsSchema = z.object({
   subjects: userSubjectListSchema,
 });
 export type SetMySubjectsDto = z.output<typeof setMySubjectsSchema>;
+
+/** Anything that could lock someone out asks for the password again. */
+const currentPasswordSchema = z.string().min(1).max(200);
+
+export const changePasswordSchema = z.object({
+  currentPassword: currentPasswordSchema,
+  newPassword: passwordSchema,
+});
+export type ChangePasswordDto = z.output<typeof changePasswordSchema>;
+
+export const changeEmailSchema = z.object({
+  currentPassword: currentPasswordSchema,
+  newEmail: emailSchema,
+});
+export type ChangeEmailDto = z.output<typeof changeEmailSchema>;
+
+export const confirmPasswordSchema = z.object({
+  currentPassword: currentPasswordSchema,
+});
+export type ConfirmPasswordDto = z.output<typeof confirmPasswordSchema>;
 
 export const setSubjectsSchema = z.object({ subjects: subjectListSchema });
 export type SetSubjectsDto = z.output<typeof setSubjectsSchema>;

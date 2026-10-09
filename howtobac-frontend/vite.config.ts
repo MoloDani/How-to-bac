@@ -18,11 +18,11 @@ const config = defineConfig(({ mode }) => {
       proxy: {
         // In development the browser only talks to this server, which forwards
         // /v1 onwards — same origin, so the refresh cookie works and CORS isn't
-        // involved. In production the reverse proxy does the same job.
-        // Set VITE_DEV_API_TARGET=http://192.168.3.109:3000 to skip Cloudflare,
-        // or http://127.0.0.1:3000 for an API running on this machine.
+        // involved. In production the app calls api.howtobac.ro directly.
+        // Set VITE_DEV_API_TARGET=http://127.0.0.1:3000 for an API running on
+        // this machine.
         '/v1': {
-          target: env.VITE_DEV_API_TARGET || 'https://howtobac.ro',
+          target: env.VITE_DEV_API_TARGET || 'https://api.howtobac.ro',
           changeOrigin: true,
           secure: true,
         },

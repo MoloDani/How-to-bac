@@ -4,6 +4,8 @@ import {
   bearer,
   createTestApp,
   newEmail,
+  SHAPES,
+  shapeOf,
   type LoggedIn,
   type TestApp,
 } from './helpers.js';
@@ -105,13 +107,9 @@ describe('Threads (e2e)', () => {
       messageCount: 1,
       author: { id: alice.userId, userName: 'Test', role: Role.USER },
     });
-    // Other users never see an author's email.
-    expect(Object.keys(res.body.author).sort()).toEqual([
-      'id',
-      'role',
-      'tag',
-      'userName',
-    ]);
+    // Pins ThreadSummary and UserSummary; authors never carry an email.
+    expect(shapeOf(res.body)).toEqual([...SHAPES.threadSummary]);
+    expect(shapeOf(res.body.author)).toEqual([...SHAPES.userSummary]);
     const threadId = res.body.id;
 
     const list = await http()
@@ -119,6 +117,7 @@ describe('Threads (e2e)', () => {
       .set(bearer(bob.accessToken))
       .expect(200);
     expect(list.body.items.map((th: IdOnly) => th.id)).toContain(threadId);
+    expect(shapeOf(list.body)).toEqual([...SHAPES.page]);
 
     const asCarol = bearer(carol.accessToken);
     const denied = await http()
@@ -159,6 +158,8 @@ describe('Threads (e2e)', () => {
       edited: false,
       deleted: false,
     });
+    // Pins MessageView.
+    expect(shapeOf(reply.body)).toEqual([...SHAPES.messageView]);
 
     const other = await seedThread(bob.userId, 'Integrals');
     const cross = await http()

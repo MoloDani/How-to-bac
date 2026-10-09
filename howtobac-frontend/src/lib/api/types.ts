@@ -6,6 +6,8 @@ export type Role = 'ADMIN' | 'CONTRIBUTOR' | 'USER'
 export interface PublicUser {
   id: string
   email: string
+  /** The address waiting to be confirmed, when a change is in flight. */
+  pendingEmail: string | null
   userName: string
   tag: string
   role: Role

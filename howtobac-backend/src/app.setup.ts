@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { API_PREFIX } from './common/constants.js';
 import type { Env } from './config/env.js';
 
@@ -11,6 +12,8 @@ export function configureApp(app: NestExpressApplication) {
   // Makes req.ip the real client IP behind a reverse proxy (for rate limits).
   // Leave at 0 if the API is exposed directly, or clients could spoof it.
   app.set('trust proxy', config.get('TRUST_PROXY', { infer: true }));
+  // Defaults suit a JSON API: HSTS, nosniff, no referrer, frames denied.
+  app.use(helmet());
   app.use(cookieParser());
   app.setGlobalPrefix(API_PREFIX);
   app.enableCors({

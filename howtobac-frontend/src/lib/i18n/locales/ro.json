@@ -8,13 +8,16 @@
     "copied": "Copiat",
     "signIn": "Autentificare",
     "signOut": "Deconectare",
+    "retry": "Încearcă din nou",
+    "goHome": "Înapoi la început",
     "back": "Înapoi",
     "cancel": "Anulează"
   },
   "nav": {
     "profile": "Profil",
     "subjects": "Materii",
-    "friends": "Prieteni"
+    "friends": "Prieteni",
+    "admin": "Administrare"
   },
   "theme": {
     "label": "Temă",
@@ -71,6 +74,12 @@
       "submit": "Salvează parola",
       "success": "Parola a fost schimbată",
       "successBody": "Te-am deconectat de pe celelalte dispozitive."
+    },
+    "confirmEmail": {
+      "working": "Confirmăm noua adresă…",
+      "success": "Adresă confirmată",
+      "successBody": "De acum te autentifici cu noua adresă. Sesiunile vechi au fost închise.",
+      "failed": "Linkul nu mai funcționează"
     }
   },
   "profile": {
@@ -97,6 +106,29 @@
       "hint": "Tagul tău este public: cine îl știe îți poate da cerere de prietenie.",
       "label": "Tag",
       "saved": "Tag salvat. Cel vechi nu mai funcționează."
+    },
+    "currentPassword": "Parola actuală",
+    "email": {
+      "title": "Adresa de email",
+      "hint": "Schimbarea are loc doar după ce confirmi din noua adresă.",
+      "newLabel": "Adresa nouă",
+      "submit": "Trimite confirmarea",
+      "sent": "Ți-am trimis un link pe noua adresă.",
+      "pending": "Aștept confirmarea de la {{email}}."
+    },
+    "password": {
+      "title": "Parola",
+      "hint": "Celelalte sesiuni se închid; rămâi conectat aici.",
+      "saved": "Parolă schimbată."
+    },
+    "danger": {
+      "title": "Șterge contul",
+      "hint": "Contul, materiile și prietenii dispar definitiv. Discuțiile la care ai participat rămân, fără numele tău.",
+      "typeTag": "Scrie {{tag}} ca să confirmi",
+      "submit": "Șterge contul",
+      "confirmTitle": "Ștergem contul?",
+      "confirmBody": "Acțiunea nu poate fi anulată.",
+      "deleted": "Contul a fost șters."
     }
   },
   "subjects": {
@@ -209,6 +241,9 @@
     "subjectsManagedByAdmin": "Materiile tale sunt gestionate de un administrator.",
     "insufficientRole": "Nu ai drepturi pentru această acțiune.",
     "userNotFound": "Utilizatorul nu a fost găsit.",
+    "emailTaken": "Adresa este deja folosită de alt cont.",
+    "emailUnchanged": "Este adresa pe care o folosești deja.",
+    "lastAdmin": "Nu poți retrograda ultimul administrator.",
     "tooLong": "Textul este prea lung.",
     "threadNotFound": "Discuția nu mai există.",
     "messageNotFound": "Mesajul nu mai există.",
@@ -231,7 +266,24 @@
     "alreadyFriends": "Sunteți deja prieteni.",
     "requestAlreadySent": "Ai trimis deja o cerere.",
     "userBlocked": "L-ai blocat pe acest utilizator.",
+    "pageCrashed": "Ceva s-a rupt pe pagina asta",
+    "pageCrashedBody": "Încearcă din nou. Dacă se repetă, revino mai târziu.",
+    "pageMissing": "Pagina nu există",
+    "pageMissingBody": "Linkul e greșit sau pagina a fost ștearsă.",
     "network": "Nu am putut contacta serverul.",
     "unexpected": "Ceva nu a mers bine. Încearcă din nou."
+  },
+  "admin": {
+    "users": {
+      "title": "Utilizatori",
+      "hint": "Schimbă rolul cuiva sau materiile pe care le poate modera.",
+      "search": "Caută după nume sau email",
+      "empty": "Niciun utilizator găsit.",
+      "loadMore": "Încarcă mai mulți",
+      "you": "tu",
+      "subjects": "Materii",
+      "subjectsSaved": "Materiile au fost salvate.",
+      "subjectCount": "{{count}} materii"
+    }
   }
 }

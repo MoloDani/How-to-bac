@@ -6,7 +6,10 @@ import {
   createTestApp,
   newEmail,
   PASSWORD,
+  nextSecond,
   refreshCookie,
+  SHAPES,
+  shapeOf,
   tagFor,
   type TestApp,
 } from './helpers.js';
@@ -96,6 +99,8 @@ describe('Auth (e2e)', () => {
       .set(bearer(res.body.accessToken))
       .expect(200);
     expect(me.body.email).toBe(email);
+    // Pins PublicUser, and keeps the password hash out of the response.
+    expect(shapeOf(me.body)).toEqual([...SHAPES.publicUser]);
   });
 
   it('rejects missing and invalid access tokens', async () => {
@@ -217,7 +222,8 @@ describe('Auth (e2e)', () => {
   it('password reset changes the password and ends existing sessions', async () => {
     const email = newEmail('reset');
     await t.registerAndVerify(email);
-    const { cookie } = await t.login(email);
+    const { cookie, accessToken } = await t.login(email);
+    await nextSecond();
 
     await http()
       .post('/v1/auth/forgot-password')
@@ -238,11 +244,45 @@ describe('Auth (e2e)', () => {
       .expect(200);
 
     await http().post('/v1/auth/refresh').set('Cookie', cookie).expect(401);
+    // The access token from before the reset is retired too, not left alive
+    // for the rest of its 15 minutes.
+    const stale = await http()
+      .get('/v1/me')
+      .set(bearer(accessToken))
+      .expect(401);
+    expect(stale.body.message).toBe('session_revoked');
+
     await http()
       .post('/v1/auth/login')
       .send({ email, password: PASSWORD })
       .expect(401);
-    await t.login(email, newPassword);
+    const { accessToken: fresh } = await t.login(email, newPassword);
+    await http().get('/v1/me').set(bearer(fresh)).expect(200);
+  });
+
+  it('counts rate limits per account, so one network can share an IP', async () => {
+    // PATCH /me allows 10 per minute. Every request here comes from the same
+    // address, so if the limit were keyed on the IP the second account would
+    // be locked out by the first one's traffic.
+    const greedy = newEmail('greedy');
+    const bystander = newEmail('bystander');
+    await t.createUser(greedy);
+    await t.createUser(bystander);
+    const a = await t.login(greedy);
+    const b = await t.login(bystander);
+
+    const rename = (session: { accessToken: string }, userName: string) =>
+      http()
+        .patch('/v1/me')
+        .set(bearer(session.accessToken))
+        .send({ userName });
+
+    for (let i = 0; i < 10; i++) {
+      await rename(a, `Greedy ${i}`).expect(200);
+    }
+    await rename(a, 'Greedy again').expect(429);
+
+    await rename(b, 'Bystander').expect(200);
   });
 
   it('gives mobile clients the refresh token in the body', async () => {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, type JwtSignOptions } from '@nestjs/jwt';
+import { JWT_ISSUER } from '../common/constants.js';
 import type { Env } from '../config/env.js';
 import { MailModule } from '../mail/mail.module.js';
 import { AuthController } from './auth.controller.js';
@@ -8,8 +9,6 @@ import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { RefreshTokenTransport } from './refresh-token-transport.js';
 import { TokenService } from './token.service.js';
-
-const JWT_ISSUER = 'howtobac';
 
 @Module({
   imports: [
@@ -35,6 +34,6 @@ const JWT_ISSUER = 'howtobac';
     TokenService,
     RefreshTokenTransport,
   ],
-  exports: [TokenService],
+  exports: [TokenService, PasswordService, RefreshTokenTransport],
 })
 export class AuthModule {}

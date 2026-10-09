@@ -40,6 +40,11 @@ export function SiteHeader() {
             <Link to="/friends" className="hover:text-foreground">
               {t('nav.friends')}
             </Link>
+            {user.role === 'ADMIN' ? (
+              <Link to="/admin/users" className="hover:text-foreground">
+                {t('nav.admin')}
+              </Link>
+            ) : null}
           </nav>
         ) : (
           <div className="mr-auto" />

@@ -170,7 +170,13 @@ export class AuthService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash: await this.passwords.hash(dto.password) },
+      data: {
+        passwordHash: await this.passwords.hash(dto.password),
+        // Retires every access token already out there, not just the refresh
+        // tokens below: if the account was compromised, the attacker's
+        // 15-minute window must close now.
+        sessionsValidFrom: new Date(),
+      },
     });
     // Whoever completed this owns the inbox, so treat the email as verified.
     await this.markVerified(userId);

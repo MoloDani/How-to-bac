@@ -55,3 +55,26 @@ export const accountExistsEmail = (
     </p>
   `),
 });
+
+export const emailChangeEmail = (url: string): MailContent => ({
+  subject: 'Confirmă noua adresă de email',
+  html: wrap(`
+    <h2 style="margin:0 0 8px">Confirmă noua adresă</h2>
+    <p>Ai cerut să folosești această adresă pentru contul tău How to Bac.
+       Confirmă ca să o activăm.</p>
+    ${button(url, 'Confirmă adresa')}
+    <p style="font-size:13px;color:#666">Linkul expiră în 24 de ore. Până
+       confirmi, te autentifici cu adresa veche.</p>
+  `),
+});
+
+export const emailChangeNoticeEmail = (newEmail: string): MailContent => ({
+  subject: 'Cineva schimbă adresa contului tău',
+  html: wrap(`
+    <h2 style="margin:0 0 8px">Adresa contului se schimbă</h2>
+    <p>Am primit cererea de a muta contul tău pe <strong>${newEmail}</strong>.
+       Schimbarea are loc doar după ce noua adresă este confirmată.</p>
+    <p style="font-size:13px;color:#666">Dacă nu ai cerut tu asta, schimbă-ți
+       parola acum: cineva are acces la contul tău.</p>
+  `),
+});

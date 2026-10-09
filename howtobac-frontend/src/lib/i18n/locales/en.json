@@ -8,13 +8,16 @@
     "copied": "Copied",
     "signIn": "Sign in",
     "signOut": "Sign out",
+    "retry": "Try again",
+    "goHome": "Back to start",
     "back": "Back",
     "cancel": "Cancel"
   },
   "nav": {
     "profile": "Profile",
     "subjects": "Subjects",
-    "friends": "Friends"
+    "friends": "Friends",
+    "admin": "Admin"
   },
   "theme": {
     "label": "Theme",
@@ -71,6 +74,12 @@
       "submit": "Save password",
       "success": "Password changed",
       "successBody": "You've been signed out everywhere else."
+    },
+    "confirmEmail": {
+      "working": "Confirming the new address…",
+      "success": "Address confirmed",
+      "successBody": "Sign in with the new address from now on. Your other sessions were closed.",
+      "failed": "This link no longer works"
     }
   },
   "profile": {
@@ -97,6 +106,29 @@
       "hint": "Your tag is public: anyone who knows it can send you a friend request.",
       "label": "Tag",
       "saved": "Tag saved. The old one no longer works."
+    },
+    "currentPassword": "Current password",
+    "email": {
+      "title": "Email address",
+      "hint": "The change only happens once you confirm from the new address.",
+      "newLabel": "New address",
+      "submit": "Send the confirmation",
+      "sent": "We've sent a link to the new address.",
+      "pending": "Waiting for {{email}} to confirm."
+    },
+    "password": {
+      "title": "Password",
+      "hint": "Your other sessions end; this one stays signed in.",
+      "saved": "Password changed."
+    },
+    "danger": {
+      "title": "Delete account",
+      "hint": "Your account, subjects and friends go for good. Discussions you took part in stay, without your name.",
+      "typeTag": "Type {{tag}} to confirm",
+      "submit": "Delete account",
+      "confirmTitle": "Delete this account?",
+      "confirmBody": "This can't be undone.",
+      "deleted": "Account deleted."
     }
   },
   "subjects": {
@@ -208,6 +240,9 @@
     "subjectsManagedByAdmin": "An administrator manages your subjects.",
     "insufficientRole": "You don't have permission for that.",
     "userNotFound": "User not found.",
+    "emailTaken": "Another account already uses that address.",
+    "emailUnchanged": "That's the address you're already using.",
+    "lastAdmin": "You can't demote the last administrator.",
     "tooLong": "That text is too long.",
     "threadNotFound": "This thread no longer exists.",
     "messageNotFound": "This message no longer exists.",
@@ -230,7 +265,24 @@
     "alreadyFriends": "You're already friends.",
     "requestAlreadySent": "You've already sent a request.",
     "userBlocked": "You blocked this user.",
+    "pageCrashed": "Something broke on this page",
+    "pageCrashedBody": "Try again. If it keeps happening, come back later.",
+    "pageMissing": "This page doesn't exist",
+    "pageMissingBody": "The link is wrong, or the page was removed.",
     "network": "Couldn't reach the server.",
     "unexpected": "Something went wrong. Please try again."
+  },
+  "admin": {
+    "users": {
+      "title": "Users",
+      "hint": "Change someone's role, or the subjects they can moderate.",
+      "search": "Search by name or email",
+      "empty": "No users found.",
+      "loadMore": "Load more",
+      "you": "you",
+      "subjects": "Subjects",
+      "subjectsSaved": "Subjects saved.",
+      "subjectCount": "{{count}} subjects"
+    }
   }
 }

@@ -33,8 +33,10 @@ export const threadQuery = (threadId: string) =>
   })
 
 /**
- * Oldest first, paging forward with `after`. Polls while the thread is open;
- * TanStack Query also refetches when the tab regains focus.
+ * Oldest first, paging forward with `after`. Deliberately not polled: a
+ * refetchInterval here would re-request every page that's been loaded, so a
+ * long thread would make several calls per tick. `newMessagesQuery` below
+ * watches the end of the thread instead.
  */
 export const messagesQuery = (threadId: string) =>
   infiniteQueryOptions({
@@ -45,8 +47,42 @@ export const messagesQuery = (threadId: string) =>
       ),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage: Page<Message>) => lastPage.nextCursor,
-    refetchInterval: 10_000,
   })
+
+/**
+ * What arrived after the newest message on screen: one request every ten
+ * seconds however much history is loaded. The key moves on by itself once the
+ * replies are appended, because `afterId` becomes the new newest id.
+ */
+export const newMessagesQuery = (threadId: string, afterId: string | null) =>
+  queryOptions({
+    queryKey: [...threadKeys.messages(threadId), 'after', afterId] as const,
+    queryFn: () =>
+      api.get<Page<Message>>(
+        `/threads/${threadId}/messages${qs({ limit: MESSAGES_PER_PAGE, after: afterId })}`,
+      ),
+    enabled: afterId !== null,
+    refetchInterval: 10_000,
+    // The tail is only interesting while it's fresh.
+    gcTime: 30_000,
+  })
+
+/** Adds polled messages to the last loaded page, skipping any already there. */
+export const appendMessages = (
+  data: { pages: Array<Page<Message>>; pageParams: Array<string | null> },
+  arrivals: Array<Message>,
+) => {
+  const known = new Set(
+    data.pages.flatMap((page) => page.items.map((item) => item.id)),
+  )
+  const fresh = arrivals.filter((message) => !known.has(message.id))
+  if (fresh.length === 0) return data
+
+  const pages = [...data.pages]
+  const last = pages[pages.length - 1]
+  pages[pages.length - 1] = { ...last, items: [...last.items, ...fresh] }
+  return { ...data, pages }
+}
 
 export const createThread = (
   subject: Subject,

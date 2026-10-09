@@ -11,13 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as ConfirmEmailRouteImport } from './routes/confirm-email'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetRouteImport } from './routes/reset'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppAdminUsersRouteImport } from './routes/_app/admin.users'
 import { Route as AppSubjectsIndexRouteImport } from './routes/_app/subjects.index'
 import { Route as AppSubjectsSubjectRouteImport } from './routes/_app/subjects.$subject'
 import { Route as AppThreadsThreadIdRouteImport } from './routes/_app/threads.$threadId'
@@ -29,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmEmailRoute = ConfirmEmailRouteImport.update({
+  id: '/confirm-email',
+  path: '/confirm-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -56,6 +64,11 @@ const VerifyRoute = VerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFriendsRoute = AppFriendsRouteImport.update({
   id: '/friends',
   path: '/friends',
@@ -65,6 +78,11 @@ const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => AppRoute,
+} as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppSubjectsIndexRoute = AppSubjectsIndexRouteImport.update({
   id: '/subjects/',
@@ -84,26 +102,32 @@ const AppThreadsThreadIdRoute = AppThreadsThreadIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/confirm-email': typeof ConfirmEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/verify': typeof VerifyRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/friends': typeof AppFriendsRoute
   '/profile': typeof AppProfileRoute
+  '/admin/users': typeof AppAdminUsersRoute
   '/subjects/$subject': typeof AppSubjectsSubjectRoute
   '/threads/$threadId': typeof AppThreadsThreadIdRoute
   '/subjects/': typeof AppSubjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/confirm-email': typeof ConfirmEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/verify': typeof VerifyRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/friends': typeof AppFriendsRoute
   '/profile': typeof AppProfileRoute
+  '/admin/users': typeof AppAdminUsersRoute
   '/subjects/$subject': typeof AppSubjectsSubjectRoute
   '/threads/$threadId': typeof AppThreadsThreadIdRoute
   '/subjects': typeof AppSubjectsIndexRoute
@@ -112,13 +136,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/confirm-email': typeof ConfirmEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/verify': typeof VerifyRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/friends': typeof AppFriendsRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/admin/users': typeof AppAdminUsersRoute
   '/_app/subjects/$subject': typeof AppSubjectsSubjectRoute
   '/_app/threads/$threadId': typeof AppThreadsThreadIdRoute
   '/_app/subjects/': typeof AppSubjectsIndexRoute
@@ -127,26 +154,32 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/confirm-email'
     | '/forgot-password'
     | '/login'
     | '/register'
     | '/reset'
     | '/verify'
+    | '/admin'
     | '/friends'
     | '/profile'
+    | '/admin/users'
     | '/subjects/$subject'
     | '/threads/$threadId'
     | '/subjects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/confirm-email'
     | '/forgot-password'
     | '/login'
     | '/register'
     | '/reset'
     | '/verify'
+    | '/admin'
     | '/friends'
     | '/profile'
+    | '/admin/users'
     | '/subjects/$subject'
     | '/threads/$threadId'
     | '/subjects'
@@ -154,13 +187,16 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/confirm-email'
     | '/forgot-password'
     | '/login'
     | '/register'
     | '/reset'
     | '/verify'
+    | '/_app/admin'
     | '/_app/friends'
     | '/_app/profile'
+    | '/_app/admin/users'
     | '/_app/subjects/$subject'
     | '/_app/threads/$threadId'
     | '/_app/subjects/'
@@ -169,6 +205,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ConfirmEmailRoute: typeof ConfirmEmailRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
@@ -190,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirm-email': {
+      id: '/confirm-email'
+      path: '/confirm-email'
+      fullPath: '/confirm-email'
+      preLoaderRoute: typeof ConfirmEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -227,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/friends': {
       id: '/_app/friends'
       path: '/friends'
@@ -240,6 +291,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile'
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/admin/users': {
+      id: '/_app/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
     }
     '/_app/subjects/': {
       id: '/_app/subjects/'
@@ -265,7 +323,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminUsersRoute: typeof AppAdminUsersRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminUsersRoute: AppAdminUsersRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppFriendsRoute: typeof AppFriendsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppSubjectsSubjectRoute: typeof AppSubjectsSubjectRoute
@@ -274,6 +345,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppFriendsRoute: AppFriendsRoute,
   AppProfileRoute: AppProfileRoute,
   AppSubjectsSubjectRoute: AppSubjectsSubjectRoute,
@@ -286,6 +358,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ConfirmEmailRoute: ConfirmEmailRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,

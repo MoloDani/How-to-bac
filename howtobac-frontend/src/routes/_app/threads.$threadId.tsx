@@ -13,7 +13,7 @@ import {
   Pin,
   Trash2,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '#/components/confirm-dialog'
@@ -42,11 +42,13 @@ import type { Message } from '#/lib/api/types'
 import { useSession } from '#/lib/auth/use-session'
 import { canEditThread, canModerate, canPost } from '#/lib/permissions'
 import {
+  appendMessages,
   deleteMessage,
   deleteThread,
   editMessage,
   messagesQuery,
   moderateThread,
+  newMessagesQuery,
   postMessage,
   renameThread,
   threadKeys,
@@ -74,6 +76,23 @@ function ThreadPage() {
     ...messagesQuery(threadId),
     enabled: thread.isSuccess,
   })
+
+  const items = messages.data?.pages.flatMap((page) => page.items) ?? []
+  const newestId = items.length > 0 ? items[items.length - 1].id : null
+
+  // Everything older is already on screen, so only the end of the thread is
+  // polled — one request per tick, whatever the history depth.
+  const arrivals = useQuery(newMessagesQuery(threadId, newestId))
+
+  useEffect(() => {
+    const fresh = arrivals.data?.items
+    if (!fresh?.length) return
+    queryClient.setQueryData(threadKeys.messages(threadId), (current) =>
+      current
+        ? appendMessages(current as Parameters<typeof appendMessages>[0], fresh)
+        : current,
+    )
+  }, [arrivals.data, queryClient, threadId])
 
   /** Message counts and last-activity ordering change with almost every action. */
   const refresh = async () => {
@@ -173,7 +192,6 @@ function ThreadPage() {
   }
 
   const data = thread.data
-  const items = messages.data?.pages.flatMap((page) => page.items) ?? []
   const byId = new Map(items.map((message) => [message.id, message]))
   const moderator = canModerate(user, data.subject)
 
